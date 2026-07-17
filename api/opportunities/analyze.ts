@@ -17,7 +17,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const body = requestSchema.parse(req.body)
     const result = await runAiOperation({
-      namespace: 'opportunity-v1',
+      namespace: 'opportunity-v2',
       input: body,
       ip: clientIp(req),
       operation: 'analysis',

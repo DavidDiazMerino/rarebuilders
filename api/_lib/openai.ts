@@ -8,6 +8,7 @@ import {
   type BuilderProfile,
   type Opportunity,
 } from '../../shared/domain.js'
+import { normalizeHundredScore } from './model-normalization.js'
 
 const MODEL = process.env.OPENAI_MODEL ?? 'gpt-5.6-luna'
 
@@ -126,6 +127,7 @@ export async function analyzeOpportunitySource(input: {
               'Mark every evidence item fact or inference.',
               'hiddennessBase and strategicValueBase are bounded heuristic signals, not probabilities.',
               'confidence represents confidence in extraction from this source.',
+              'confidence, hiddennessBase and strategicValueBase must be integer scores from 0 to 100; never use decimals from 0 to 1.',
               'Use ISO 8601 with an explicit offset for deadlines when the source provides enough information.',
               'sourceUrl must exactly equal the supplied source URL, including an empty string for pasted-only evidence.',
             ].join('\n'),
@@ -147,7 +149,12 @@ export async function analyzeOpportunitySource(input: {
     text: { format: zodTextFormat(opportunityAnalysisSchema, 'opportunity_analysis') },
   })
   if (!response.output_parsed) throw new Error('GPT-5.6 did not return a usable opportunity record.')
-  return opportunityAnalysisSchema.parse(response.output_parsed)
+  return opportunityAnalysisSchema.parse({
+    ...response.output_parsed,
+    hiddennessBase: normalizeHundredScore(response.output_parsed.hiddennessBase),
+    strategicValueBase: normalizeHundredScore(response.output_parsed.strategicValueBase),
+    confidence: normalizeHundredScore(response.output_parsed.confidence),
+  })
 }
 
 export async function generateOpportunityStrategy(input: {
