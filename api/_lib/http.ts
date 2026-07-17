@@ -49,6 +49,15 @@ export function clientIp(req: VercelRequest) {
 }
 
 export function publicMessage(error: unknown) {
-  if (error instanceof Error && error.message) return error.message
+  if (error instanceof Error && error.message) {
+    const message = error.message
+    if (message.includes('429') && message.toLowerCase().includes('quota')) {
+      return 'The shared live GPT budget is currently unavailable. The cached demo remains fully testable.'
+    }
+    if (message.includes('401') || message.toLowerCase().includes('incorrect api key')) {
+      return 'Live GPT authentication is temporarily unavailable. The cached demo remains fully testable.'
+    }
+    return message
+  }
   return 'The server could not complete the request.'
 }
