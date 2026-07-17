@@ -11,6 +11,8 @@ they build if they enter?**
 
 Built for **OpenAI Build Week 2026** in the **Work and Productivity** track.
 
+**Live demo:** [rarebuilders.vercel.app](https://rarebuilders.vercel.app)
+
 ## What works
 
 - A deterministic, no-login demo for David's real builder context.
@@ -107,8 +109,8 @@ Environment variables:
 | --- | --- | --- |
 | `OPENAI_API_KEY` | Live AI only | Server-side Responses API access |
 | `OPENAI_MODEL` | No | Defaults to `gpt-5.6-luna` |
-| `UPSTASH_REDIS_REST_URL` | Live AI only | Shared cache and quota state |
-| `UPSTASH_REDIS_REST_TOKEN` | Live AI only | Upstash REST authentication |
+| `UPSTASH_REDIS_REST_URL` or `KV_REST_API_URL` | Live AI only | Shared cache and quota state |
+| `UPSTASH_REDIS_REST_TOKEN` or `KV_REST_API_TOKEN` | Live AI only | Upstash REST authentication |
 | `AI_GLOBAL_OPERATION_LIMIT` | No | Hard global reservation ceiling; default `40` |
 | `GITHUB_TOKEN` | No | Raises public GitHub REST limits |
 

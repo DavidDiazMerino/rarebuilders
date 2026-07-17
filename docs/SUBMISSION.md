@@ -9,8 +9,8 @@ rules before submitting.
 - **Track:** Work and Productivity
 - **Tagline:** Personal opportunity intelligence for builders who want an edge,
   not another infinite directory.
-- **Repository:** `[pending public GitHub URL]`
-- **Demo:** `[pending production URL]`
+- **Repository:** `https://github.com/DavidDiazMerino/rarebuilders`
+- **Demo:** `https://rarebuilders.vercel.app`
 - **Public YouTube video:** `[pending]`
 - **Primary Codex Session ID:** `[pending — generate with /feedback]`
 

@@ -358,15 +358,15 @@ Update this section as work progresses.
 
 ### Repository and testing blockers
 
-- [ ] Add a Git remote and produce the repository URL.
-- [ ] Publish the repository publicly.
+- [x] Add a Git remote and produce the repository URL.
+- [x] Publish the repository publicly.
 - [x] Choose and include the MIT project license.
 - [x] Audit dependency, asset, font, icon, and fixture-data licenses.
 - [x] Document asset and data provenance.
 - [x] Add required Codex/GPT-5.6 collaboration detail to the README.
 - [x] Add exact judge setup and test instructions to the README.
-- [ ] Deploy a stable demo/test instance.
-- [ ] Ensure judge access is free and works in a clean/incognito browser.
+- [x] Deploy a stable demo/test instance at `https://rarebuilders.vercel.app`.
+- [x] Ensure the deterministic judge path is free and works in a clean browser.
 - [ ] Keep demo access alive through the judging period.
 - [x] Add safe, explicitly labelled sample data; no test account is needed.
 - [x] Run lint, unit tests, production build and Chromium end-to-end test.
