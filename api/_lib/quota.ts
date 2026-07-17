@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { getRedis } from './redis'
+import { getRedis } from './redis.js'
 
 export type AiOperation = 'profile' | 'analysis' | 'strategy'
 

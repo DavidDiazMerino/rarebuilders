@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { searchOpportunityIssues } from '../_lib/github'
-import { publicMessage, requestId, requireMethod, sendData, sendError } from '../_lib/http'
-import type { VercelRequest, VercelResponse } from '../_lib/vercel-types'
+import { searchOpportunityIssues } from '../_lib/github.js'
+import { publicMessage, requestId, requireMethod, sendData, sendError } from '../_lib/http.js'
+import type { VercelRequest, VercelResponse } from '../_lib/vercel-types.js'
 
 const querySchema = z.object({ q: z.string().min(2).max(240) })
 

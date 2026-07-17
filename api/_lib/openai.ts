@@ -7,7 +7,7 @@ import {
   strategySchema,
   type BuilderProfile,
   type Opportunity,
-} from '../../shared/domain'
+} from '../../shared/domain.js'
 
 const MODEL = process.env.OPENAI_MODEL ?? 'gpt-5.6-luna'
 

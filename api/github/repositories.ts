@@ -1,7 +1,7 @@
 import { z } from 'zod'
-import { listPublicRepositories } from '../_lib/github'
-import { publicMessage, requestId, requireMethod, sendData, sendError } from '../_lib/http'
-import type { VercelRequest, VercelResponse } from '../_lib/vercel-types'
+import { listPublicRepositories } from '../_lib/github.js'
+import { publicMessage, requestId, requireMethod, sendData, sendError } from '../_lib/http.js'
+import type { VercelRequest, VercelResponse } from '../_lib/vercel-types.js'
 
 const querySchema = z.object({ username: z.string().min(1).max(39).regex(/^[a-zA-Z0-9-]+$/) })
 

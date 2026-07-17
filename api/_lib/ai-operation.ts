@@ -1,6 +1,6 @@
-import { contentHash } from './cache'
-import { getCached, setCached } from './redis'
-import { reserveAiOperation, type AiOperation } from './quota'
+import { contentHash } from './cache.js'
+import { getCached, setCached } from './redis.js'
+import { reserveAiOperation, type AiOperation } from './quota.js'
 
 export async function runAiOperation<T>({
   namespace,

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto'
-import type { ApiFailure, ApiSuccess } from '../../shared/domain'
-import type { VercelRequest, VercelResponse } from './vercel-types'
+import type { ApiFailure, ApiSuccess } from '../../shared/domain.js'
+import type { VercelRequest, VercelResponse } from './vercel-types.js'
 
 export function requestId(req: VercelRequest) {
   const existing = req.headers['x-vercel-id']

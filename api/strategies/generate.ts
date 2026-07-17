@@ -1,9 +1,9 @@
 import { z } from 'zod'
-import { builderProfileSchema, opportunitySchema } from '../../shared/domain'
-import { runAiOperation } from '../_lib/ai-operation'
-import { clientIp, publicMessage, requestId, requireMethod, sendData, sendError } from '../_lib/http'
-import { generateOpportunityStrategy, MODEL } from '../_lib/openai'
-import type { VercelRequest, VercelResponse } from '../_lib/vercel-types'
+import { builderProfileSchema, opportunitySchema } from '../../shared/domain.js'
+import { runAiOperation } from '../_lib/ai-operation.js'
+import { clientIp, publicMessage, requestId, requireMethod, sendData, sendError } from '../_lib/http.js'
+import { generateOpportunityStrategy, MODEL } from '../_lib/openai.js'
+import type { VercelRequest, VercelResponse } from '../_lib/vercel-types.js'
 
 const requestSchema = z.object({
   opportunity: opportunitySchema,

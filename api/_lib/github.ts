@@ -1,5 +1,5 @@
-import { getCached, setCached } from './redis'
-import { contentHash } from './cache'
+import { getCached, setCached } from './redis.js'
+import { contentHash } from './cache.js'
 
 const headers: Record<string, string> = {
   Accept: 'application/vnd.github+json',
