@@ -131,6 +131,23 @@ describe('opportunity scoring', () => {
     expect(evidenced.reasonsAgainst.join(' ')).toMatch(/company/)
   })
 
+  it('does not interpret an unknown zero effort as free work', () => {
+    const opportunity: Opportunity = {
+      ...demoOpportunities[0],
+      effortHours: 0,
+      unknowns: ['Effort estimate is unavailable from the source.'],
+    }
+
+    const evaluation = evaluateOpportunity(demoProfile, opportunity)
+
+    expect(evaluation.effortFit).toBe(45)
+    expect(evaluation.verificationStatus).toBe('needs-review')
+    expect(evaluation.riskFactors).toEqual(expect.arrayContaining([
+      expect.objectContaining({ label: 'Unknown effort', impact: 14 }),
+    ]))
+    expect(evaluation.reasonsAgainst.join(' ')).toMatch(/Effort is unknown/)
+  })
+
   it('canonicalizes equivalent domain labels into one learned signal', () => {
     const feedback: FeedbackEvent[] = [
       {

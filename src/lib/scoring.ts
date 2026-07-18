@@ -270,16 +270,26 @@ export function evaluateOpportunity(
 
   const deadline = deadlineState(opportunity, now)
   const availableHours = profile.weeklyHours * deadline.weeks
-  const effortRatio = availableHours > 0 ? opportunity.effortHours / availableHours : 2
+  const effortUnknown = opportunity.effortHours <= 0
+    || opportunity.unknowns.some((unknown) => /effort.*(?:unknown|unavailable|not (?:provided|stated))|no .*effort/i.test(unknown))
+  const effortRatio = effortUnknown
+    ? 1
+    : availableHours > 0 ? opportunity.effortHours / availableHours : 2
   const effortFit = deadline.expired
     ? 0
+    : effortUnknown
+      ? 45
     : effortRatio <= 0.75
       ? 100
       : effortRatio >= 1.5
         ? 0
         : clamp(((1.5 - effortRatio) / 0.75) * 100)
   const effortFactors = [
-    factor('Estimated effort', -opportunity.effortHours, `${opportunity.effortHours} total estimated hours.`),
+    factor(
+      'Estimated effort',
+      effortUnknown ? -20 : -opportunity.effortHours,
+      effortUnknown ? 'No reliable effort estimate; a neutral-conservative score is used.' : `${opportunity.effortHours} total estimated hours.`,
+    ),
     factor('Available capacity', availableHours, `${Math.round(availableHours)} hours available across ${deadline.weeks.toFixed(1)} week(s).`),
     factor('Deadline confidence', opportunity.deadline ? 0 : -12, opportunity.deadline ? 'Deadline supplied.' : 'No deadline; two weeks assumed.'),
   ]
@@ -307,6 +317,7 @@ export function evaluateOpportunity(
     factor('Extraction uncertainty', (100 - opportunity.confidence) * 0.35, `${opportunity.confidence}/100 extraction confidence.`),
     factor('Material unknowns', opportunity.unknowns.length * 8, `${opportunity.unknowns.length} unresolved unknown(s).`),
     factor('Application burden', burdenRisk, opportunity.applicationBurden),
+    factor('Unknown effort', effortUnknown ? 14 : 0, effortUnknown ? 'Effort must be estimated before committing.' : 'A source-grounded effort estimate exists.'),
     factor('Effort pressure', effortFit < 50 ? 18 : 0, effortFit < 50 ? 'Estimated effort strains available capacity.' : 'Effort is within available capacity.'),
     factor('Participation mismatch', incompatibleParticipation || incompatibleTeam ? 22 : 0, incompatibleParticipation ? 'Participation path conflicts with the profile.' : 'No confirmed mismatch.'),
     factor('Deadline pressure', opportunity.deadline ? urgencyRisk : 10, opportunity.deadline ? `${deadline.days?.toFixed(0)} days remain.` : 'Deadline is unknown.'),
@@ -318,6 +329,7 @@ export function evaluateOpportunity(
     ? 'closed'
     : opportunity.provenance.mode === 'illustrative'
       || opportunity.confidence < 60
+      || effortUnknown
       || incompatibleParticipation
       || incompatibleTeam
       || opportunity.unknowns.some((unknown) => /eligib|entity|deadline|partnership/i.test(unknown))
@@ -350,6 +362,8 @@ export function evaluateOpportunity(
   const reasonsAgainst = [
     deadline.expired
       ? 'The documented deadline has passed.'
+      : effortUnknown
+        ? 'Effort is unknown, so the opportunity cannot receive a high commitment verdict yet.'
       : effortFit < 55
         ? `Estimated effort strains the available ${Math.round(availableHours)}-hour capacity.`
         : `Estimated effort fits within roughly ${Math.round(availableHours)} available hours.`,
