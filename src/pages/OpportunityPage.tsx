@@ -5,12 +5,14 @@ import {
   Bookmark,
   CheckCircle2,
   Clock3,
+  EyeOff,
   ExternalLink,
+  Flag,
   MoreHorizontal,
   Sparkles,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import { ScoreBar } from '../components/ScoreBar'
 import { api } from '../lib/api'
 import { deadlineDistance, formatDeadline } from '../lib/format'
@@ -19,10 +21,13 @@ import { useAppState } from '../state/AppState'
 
 export function OpportunityPage() {
   const { opportunityId } = useParams()
+  const [searchParams] = useSearchParams()
   const { data, recordFeedback, saveStrategy } = useAppState()
   const opportunity = data.opportunities.find((item) => item.id === opportunityId)
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
+  const [rejecting, setRejecting] = useState(false)
+  const [decisionReason, setDecisionReason] = useState('')
 
   const evaluation = useMemo(
     () => opportunity ? evaluateOpportunity(data.profile, opportunity, data.feedback) : null,
@@ -39,6 +44,7 @@ export function OpportunityPage() {
   }
 
   const strategy = data.strategies[opportunity.id]
+  const currentDecision = [...data.feedback].reverse().find((event) => event.opportunityId === opportunity.id)
   const hasPublicSource = /^https?:\/\//i.test(opportunity.sourceUrl)
   const matchedProjects = evaluation.matchedProjectIds
     .map((id) => data.profile.projects.find((project) => project.id === id))
@@ -60,6 +66,17 @@ export function OpportunityPage() {
   return (
     <div className="page dossier-page">
       <Link className="back-link" to="/radar"><ArrowLeft size={16} /> Back to today’s radar</Link>
+      {searchParams.get('added') === '1' ? (
+        <div className="pool-confirmation">
+          <CheckCircle2 size={17} />
+          <span>
+            <strong>Added to your opportunity pool.</strong>
+            {searchParams.get('rank') === 'outside'
+              ? ' It did not enter today’s five picks yet.'
+              : ` It currently ranks #${searchParams.get('rank')} in today’s radar.`}
+          </span>
+        </div>
+      ) : null}
 
       <header className="dossier-header">
         <div>
@@ -181,6 +198,15 @@ export function OpportunityPage() {
             <ScoreBar label="Personal fit" value={evaluation.fit} tone="acid" />
             <ScoreBar label="Win signal" value={evaluation.winSignal} />
             <ScoreBar label="Hiddenness" value={evaluation.hiddenness} tone="warm" />
+            <div className="hiddenness-breakdown">
+              <span>{evaluation.hiddennessConfidence}% signal confidence</span>
+              {evaluation.hiddennessFactors.map((factor) => (
+                <p key={factor.label}>
+                  <strong>{factor.impact > 0 ? '+' : ''}{factor.impact}</strong>
+                  {factor.evidence}
+                </p>
+              ))}
+            </div>
             <ScoreBar label="Strategic value" value={evaluation.strategicValue} />
             <ScoreBar label="Effort fit" value={evaluation.effortFit} />
             <ScoreBar label="Risk" value={evaluation.risk} tone="warm" />
@@ -194,8 +220,34 @@ export function OpportunityPage() {
             <ul>{opportunity.deliverables.map((item) => <li key={item}>{item}</li>)}</ul>
           </section>
           <section className="sidebar-actions">
-            <button onClick={() => recordFeedback(opportunity, 'saved')}><Bookmark size={16} /> Save</button>
-            <button onClick={() => recordFeedback(opportunity, 'more-like-this')}><MoreHorizontal size={16} /> More like this</button>
+            <button className={currentDecision?.action === 'saved' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'saved')}>
+              <Bookmark size={16} /> Save
+            </button>
+            <button className={currentDecision?.action === 'entered' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'entered')}>
+              <Flag size={16} /> I entered
+            </button>
+            <button className={currentDecision?.action === 'more-like-this' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'more-like-this')}>
+              <MoreHorizontal size={16} /> More like this
+            </button>
+            <button className={currentDecision?.action === 'rejected' ? 'selected' : ''} onClick={() => setRejecting((value) => !value)}>
+              <EyeOff size={16} /> Not for me
+            </button>
+            {rejecting ? (
+              <div className="decision-reason">
+                <textarea
+                  value={decisionReason}
+                  onChange={(event) => setDecisionReason(event.target.value.slice(0, 500))}
+                  placeholder="Optional reason — this helps the radar learn."
+                />
+                <button onClick={() => {
+                  recordFeedback(opportunity, 'rejected', decisionReason.trim() || undefined)
+                  setRejecting(false)
+                }}>Confirm rejection</button>
+              </div>
+            ) : null}
+            <button className={currentDecision?.action === 'ignored' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'ignored')}>
+              Ignore quietly
+            </button>
             {hasPublicSource ? (
               <a href={opportunity.sourceUrl} target="_blank" rel="noreferrer">Verify source <ArrowUpRight size={16} /></a>
             ) : null}

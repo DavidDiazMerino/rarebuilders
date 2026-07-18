@@ -9,12 +9,14 @@ import {
 } from 'lucide-react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
+import { useDailyDiscovery } from '../lib/use-daily-discovery'
 import { useAppState } from '../state/AppState'
 
 const navItems = [
   { to: '/radar', label: 'Today’s radar', icon: Crosshair },
   { to: '/discover', label: 'Discover', icon: Binoculars },
   { to: '/inbox', label: 'Add source', icon: FileInput },
+  { to: '/library', label: 'Library', icon: Archive },
   { to: '/profile', label: 'Builder memory', icon: CircleUserRound },
 ]
 
@@ -22,6 +24,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { data, reset } = useAppState()
   const navigate = useNavigate()
   const location = useLocation()
+  const refreshingSources = useDailyDiscovery()
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
@@ -53,10 +56,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="rail-note">
-          <Archive size={17} />
+          <Archive size={17} className={refreshingSources ? 'spin' : ''} />
           <div>
-            <span>Local-first memory</span>
-            <small>Your profile stays in this browser.</small>
+            <span>{refreshingSources ? 'Refreshing sources' : 'Local-first memory'}</span>
+            <small>{refreshingSources ? 'Updating today’s candidate pool.' : 'Your profile stays in this browser.'}</small>
           </div>
         </div>
 

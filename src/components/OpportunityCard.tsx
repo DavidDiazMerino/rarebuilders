@@ -13,11 +13,12 @@ export function OpportunityCard({
   currentFeedback?: FeedbackAction
   onFeedback: (action: FeedbackAction) => void
 }) {
-  const { opportunity, evaluation, bucket } = item
+  const { opportunity, evaluation, bucket, bucketMatch } = item
   return (
     <article className="opportunity-card">
       <div className="opportunity-card-topline">
         <span className={`bucket-label ${bucket}`}>{bucket}</span>
+        {bucketMatch === 'closest' ? <span className="bucket-fit">Closest available</span> : null}
         <span className={opportunity.fixture ? 'data-label demo' : 'data-label live'}>
           {opportunity.fixture ? 'Demo dataset' : 'Live source'}
         </span>

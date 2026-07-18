@@ -1,7 +1,26 @@
 {
   "framework": "vite",
   "functions": {
-    "api/**/*.ts": {
+    "api/capabilities.ts": {
+      "maxDuration": 30
+    },
+    "api/discover/**/*.ts": {
+      "maxDuration": 30
+    },
+    "api/github/**/*.ts": {
+      "maxDuration": 30
+    },
+    "api/opportunities/**/*.ts": {
+      "maxDuration": 30
+    },
+    "api/profile/**/*.ts": {
+      "maxDuration": 30
+    },
+    "api/source/**/*.ts": {
+      "includeFiles": "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+      "maxDuration": 30
+    },
+    "api/strategies/**/*.ts": {
       "maxDuration": 30
     }
   },

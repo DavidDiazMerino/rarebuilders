@@ -5,19 +5,32 @@ import type {
   Opportunity,
   OpportunityEvaluation,
   RadarBucket,
+  RadarBucketMatch,
   RadarItem,
   Verdict,
 } from '../../shared/domain'
+import { estimateHiddenness } from '../../shared/hiddenness'
 
 const clamp = (value: number) => Math.max(0, Math.min(100, Math.round(value)))
-const intersect = (left: string[], right: string[]) => left.filter((item) => right.includes(item))
+export const normalizeDomainSignal = (value: string) => value
+  .normalize('NFKD')
+  .replace(/[\u0300-\u036f]/g, '')
+  .trim()
+  .toLowerCase()
+  .replace(/[^a-z0-9+#.]+/g, '-')
+  .replace(/^-+|-+$/g, '')
+
+const intersect = (left: string[], right: string[]) => {
+  const normalizedRight = new Set(right.map(normalizeDomainSignal))
+  return left.filter((item) => normalizedRight.has(normalizeDomainSignal(item)))
+}
 
 function domainAffinity(profile: BuilderProfile, opportunity: Opportunity) {
   const direct = intersect(profile.domains, opportunity.domains)
   const wildcard = intersect(profile.wildcardDomains, opportunity.domains)
   const blocked = intersect(profile.noGoDomains, opportunity.domains)
   const learned = opportunity.domains.reduce(
-    (total, domain) => total + (profile.learnedDomainWeights[domain] ?? 0),
+    (total, domain) => total + (profile.learnedDomainWeights[normalizeDomainSignal(domain)] ?? 0),
     0,
   )
   return { direct, wildcard, blocked, learned }
@@ -53,8 +66,8 @@ function matchedProjects(profile: BuilderProfile, opportunity: Opportunity) {
 }
 
 function feedbackModifier(opportunity: Opportunity, feedback: FeedbackEvent[]) {
-  return feedback.reduce((modifier, event) => {
-    if (!event.domains.some((domain) => opportunity.domains.includes(domain))) return modifier
+  return latestFeedbackEvents(feedback).reduce((modifier, event) => {
+    if (!intersect(event.domains, opportunity.domains).length) return modifier
     if (event.action === 'more-like-this') return modifier + 7
     if (event.action === 'saved') return modifier + 3
     if (event.action === 'entered') return modifier + 8
@@ -62,6 +75,45 @@ function feedbackModifier(opportunity: Opportunity, feedback: FeedbackEvent[]) {
     if (event.action === 'ignored') return modifier - 3
     return modifier
   }, 0)
+}
+
+function latestFeedbackEvents(feedback: FeedbackEvent[]) {
+  const latest = new Map<string, FeedbackEvent>()
+  for (const event of feedback) latest.set(event.opportunityId, event)
+  return [...latest.values()]
+}
+
+function feedbackDelta(action: FeedbackAction) {
+  return action === 'more-like-this'
+    ? 5
+    : action === 'saved' || action === 'entered'
+      ? 2
+      : action === 'rejected'
+        ? -5
+        : action === 'ignored'
+          ? -2
+          : 0
+}
+
+export function canonicalLearnedDomainWeights(weights: Record<string, number>) {
+  const canonical: Record<string, number> = {}
+  for (const [domain, weight] of Object.entries(weights)) {
+    const key = normalizeDomainSignal(domain)
+    if (!key) continue
+    canonical[key] = Math.max(-20, Math.min(20, (canonical[key] ?? 0) + weight))
+  }
+  return canonical
+}
+
+export function learnedDomainWeightsFromFeedback(feedback: FeedbackEvent[]) {
+  const learned: Record<string, number> = {}
+  for (const event of latestFeedbackEvents(feedback)) {
+    const delta = feedbackDelta(event.action)
+    for (const domain of new Set(event.domains.map(normalizeDomainSignal).filter(Boolean))) {
+      learned[domain] = Math.max(-20, Math.min(20, (learned[domain] ?? 0) + delta))
+    }
+  }
+  return learned
 }
 
 function getVerdict(overall: number, risk: number, effortFit: number): Verdict {
@@ -78,23 +130,40 @@ export function evaluateOpportunity(
   feedback: FeedbackEvent[] = [],
 ): OpportunityEvaluation {
   const { direct, wildcard, blocked, learned } = domainAffinity(profile, opportunity)
+  const hiddenness = estimateHiddenness(opportunity)
   const projects = matchedProjects(profile, opportunity)
+  const documentedSkills = [
+    ...profile.fastSkills,
+    ...profile.careerProfile.skills.map((skill) => skill.name),
+    ...profile.projects.flatMap((project) => project.technologies),
+  ]
+  const skillMatches = intersect(documentedSkills, opportunity.requiredSkills)
   const regionMatch = profile.regions.includes('global') || profile.regions.includes(opportunity.region)
   const languageMatch = profile.languages.includes(opportunity.language)
   const projectLeverage = Math.min(20, projects.length * 9)
+  const skillLeverage = Math.min(16, skillMatches.length * 5)
   const rewardFit = rewardMatches(profile, opportunity) ? 7 : 0
   const incompatibleTeam = teamMismatch(profile, opportunity)
+  const participationMismatch = !opportunity.participationModes.includes('unknown')
+    && !opportunity.participationModes.some((mode) => profile.participationModes.includes(mode))
+  const burdenRisk = opportunity.applicationBurden === 'high'
+    ? 16
+    : opportunity.applicationBurden === 'medium'
+      ? 7
+      : 0
 
   const fit = clamp(
     24
       + direct.length * 16
       + wildcard.length * 7
       + projectLeverage
+      + skillLeverage
       + (regionMatch ? 7 : 0)
       + (languageMatch ? 6 : 0)
       + rewardFit
       - blocked.length * 35
       - (incompatibleTeam ? 18 : 0)
+      - (participationMismatch ? 22 : 0)
       + learned,
   )
 
@@ -111,7 +180,7 @@ export function evaluateOpportunity(
             : 1
 
   const winSignal = clamp(
-    opportunity.hiddennessBase * 0.43
+    hiddenness.score * 0.43
       + participantSignal
       + projectLeverage * 0.7
       + opportunity.confidence * 0.08,
@@ -120,8 +189,10 @@ export function evaluateOpportunity(
   const risk = clamp(
     (100 - opportunity.confidence) * 0.5
       + opportunity.unknowns.length * 8
+      + burdenRisk
       + (effortFit < 50 ? 18 : 0)
       + (incompatibleTeam ? 18 : 0)
+      + (participationMismatch ? 18 : 0)
       + (opportunity.deadline ? 0 : 12),
   )
   const modifier = feedbackModifier(opportunity, feedback)
@@ -143,8 +214,10 @@ export function evaluateOpportunity(
         : 'The domain is not an obvious fit, which may create a differentiated angle.',
     projects.length
       ? `${projects[0].name} gives you reusable product or domain leverage.`
-      : 'A fresh artifact could still create portfolio value.',
-    opportunity.hiddennessBase >= 70
+      : skillMatches.length
+        ? `Your documented ${skillMatches.slice(0, 3).join(', ')} experience matches the requested work.`
+        : 'A fresh artifact could still create portfolio value.',
+    hiddenness.score >= 70
       ? 'The discovery path is less saturated than a mainstream directory.'
       : 'The opportunity has enough strategic value to offset its visibility.',
   ]
@@ -157,14 +230,18 @@ export function evaluateOpportunity(
       : opportunity.participants === null
         ? 'Applicant volume is unknown, so the win signal has lower confidence.'
         : 'Visible participation is only a proxy for actual competition.',
-    opportunity.unknowns[0] ?? 'Eligibility and source details still need a final human check.',
+    participationMismatch
+      ? `Participation currently expects ${opportunity.participationModes.join(' or ')}; you need a partner or entity path.`
+      : opportunity.unknowns[0] ?? 'Eligibility and source details still need a final human check.',
   ]
 
   return {
     opportunityId: opportunity.id,
     fit,
     winSignal,
-    hiddenness: opportunity.hiddennessBase,
+    hiddenness: hiddenness.score,
+    hiddennessConfidence: hiddenness.confidence,
+    hiddennessFactors: hiddenness.factors,
     strategicValue: opportunity.strategicValueBase,
     effortFit,
     risk,
@@ -188,11 +265,11 @@ export function buildRadar(
   opportunities: Opportunity[],
   feedback: FeedbackEvent[] = [],
 ): RadarItem[] {
-  const rejected = new Set(
-    feedback
-      .filter((event) => event.action === 'rejected' || event.action === 'ignored')
-      .map((event) => event.opportunityId),
-  )
+  const latestFeedback = new Map<string, FeedbackEvent>()
+  for (const event of feedback) latestFeedback.set(event.opportunityId, event)
+  const rejected = new Set([...latestFeedback.values()]
+    .filter((event) => event.action === 'rejected' || event.action === 'ignored')
+    .map((event) => event.opportunityId))
   const ranked = opportunities
     .filter((opportunity) => !rejected.has(opportunity.id))
     .filter((opportunity) => intersect(profile.noGoDomains, opportunity.domains).length === 0)
@@ -208,26 +285,27 @@ export function buildRadar(
     bucket: RadarBucket,
     count: number,
     predicate: (item: (typeof ranked)[number]) => boolean,
+    bucketMatch: RadarBucketMatch = 'exact',
   ) => {
     for (const item of ranked) {
       if (selected.filter((selectedItem) => selectedItem.bucket === bucket).length >= count) break
       if (used.has(item.opportunity.id) || !predicate(item)) continue
-      selected.push({ ...item, bucket })
+      selected.push({ ...item, bucket, bucketMatch })
       used.add(item.opportunity.id)
     }
   }
 
   take('practical', 2, ({ opportunity, evaluation }) =>
-    !isWildcard(profile, opportunity) && opportunity.hiddennessBase < 75 && evaluation.effortFit >= 45,
+    !isWildcard(profile, opportunity) && evaluation.hiddenness < 75 && evaluation.effortFit >= 45,
   )
-  take('rare', 2, ({ opportunity }) =>
-    !isWildcard(profile, opportunity) && opportunity.hiddennessBase >= 68,
+  take('rare', 2, ({ opportunity, evaluation }) =>
+    !isWildcard(profile, opportunity) && evaluation.hiddenness >= 68,
   )
   take('wildcard', 1, ({ opportunity }) => isWildcard(profile, opportunity))
 
   const targets: Array<[RadarBucket, number]> = [['practical', 2], ['rare', 2], ['wildcard', 1]]
   for (const [bucket, target] of targets) {
-    take(bucket, target, () => true)
+    take(bucket, target, () => true, 'closest')
   }
 
   return selected.slice(0, 5)
@@ -249,18 +327,13 @@ export function createFeedback(
 }
 
 export function applyFeedbackLearning(profile: BuilderProfile, event: FeedbackEvent): BuilderProfile {
-  const delta = event.action === 'more-like-this'
-    ? 5
-    : event.action === 'saved' || event.action === 'entered'
-      ? 2
-      : event.action === 'rejected'
-        ? -5
-        : event.action === 'ignored'
-          ? -2
-          : 0
-  const learnedDomainWeights = { ...profile.learnedDomainWeights }
-  for (const domain of event.domains) {
-    learnedDomainWeights[domain] = Math.max(-20, Math.min(20, (learnedDomainWeights[domain] ?? 0) + delta))
+  const delta = feedbackDelta(event.action)
+  const learnedDomainWeights = canonicalLearnedDomainWeights(profile.learnedDomainWeights)
+  for (const domain of new Set(event.domains.map(normalizeDomainSignal).filter(Boolean))) {
+    learnedDomainWeights[domain] = Math.max(
+      -20,
+      Math.min(20, (learnedDomainWeights[domain] ?? 0) + delta),
+    )
   }
   return { ...profile, learnedDomainWeights }
 }

@@ -1,18 +1,25 @@
 import type {
   ApiFailure,
   ApiSuccess,
+  AutomatedConnectorId,
   BuilderProfile,
+  CareerProfile,
   Opportunity,
+  OpportunityCandidate,
   OpportunityAnalysis,
   ProfileSummary,
   Strategy,
 } from '../../shared/domain'
 
 async function request<T>(url: string, init?: RequestInit): Promise<ApiSuccess<T>> {
+  const ownerCode = typeof window === 'undefined'
+    ? ''
+    : window.sessionStorage.getItem('rarebuilders:owner-code') ?? ''
   const response = await fetch(url, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...(ownerCode ? { 'X-RareBuilders-Owner-Code': ownerCode } : {}),
       ...init?.headers,
     },
   })
@@ -58,14 +65,41 @@ export type GithubOpportunityCandidate = {
   updatedAt: string
 }
 
+export type ConnectorSearchResult = {
+  connector: AutomatedConnectorId
+  candidates: OpportunityCandidate[]
+  configured: boolean
+  error?: string
+}
+
+export type SourceExtraction = {
+  url: string
+  title: string
+  text: string
+  method: 'github-api' | 'eu-api' | 'devpost-api' | 'kaggle-api' | 'semantic-html' | 'plain-text' | 'pdf'
+  contentType: string
+  wordCount: number
+  warnings: string[]
+}
+
 export const api = {
+  capabilities: () => request<{
+    owner: boolean
+    autoAnalysisChoices: Array<0 | 2 | 5>
+    dailyLimits: { profile: number; analysis: number; strategy: number }
+  }>('/api/capabilities'),
+  analyzeCareer: (input: { filename: string; mimeType: string; base64: string }) =>
+    request<CareerProfile>('/api/profile/cv', {
+      method: 'POST',
+      body: JSON.stringify(input),
+    }),
   summarizeProfile: (input: { notes: NoteInput[]; repositories: GithubProjectInput[] }) =>
     request<ProfileSummary>('/api/profile/summarize', {
       method: 'POST',
       body: JSON.stringify(input),
     }),
   fetchSource: (url: string) =>
-    request<{ url: string; title: string; text: string }>('/api/source/fetch', {
+    request<SourceExtraction>('/api/source/fetch', {
       method: 'POST',
       body: JSON.stringify({ url }),
     }),
@@ -85,4 +119,9 @@ export const api = {
     request<GithubProjectInput>(`/api/github/repository-context?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`),
   githubOpportunities: (query: string) =>
     request<GithubOpportunityCandidate[]>(`/api/github/opportunities?q=${encodeURIComponent(query)}`),
+  discover: (connectors: AutomatedConnectorId[], query: string) =>
+    request<ConnectorSearchResult[]>('/api/discover/search', {
+      method: 'POST',
+      body: JSON.stringify({ connectors, query }),
+    }),
 }

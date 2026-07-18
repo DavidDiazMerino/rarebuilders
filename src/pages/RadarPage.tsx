@@ -13,6 +13,16 @@ export function RadarPage() {
     [data.profile, data.opportunities, data.feedback],
   )
   const feedbackByOpportunity = new Map(data.feedback.map((event) => [event.opportunityId, event.action]))
+  const bucketSummary = (bucket: 'practical' | 'rare' | 'wildcard') => {
+    const items = radar.filter((item) => item.bucket === bucket)
+    return {
+      count: items.length,
+      closest: items.filter((item) => item.bucketMatch === 'closest').length,
+    }
+  }
+  const practical = bucketSummary('practical')
+  const rare = bucketSummary('rare')
+  const wildcard = bucketSummary('wildcard')
   const date = new Intl.DateTimeFormat('en', {
     weekday: 'long',
     month: 'long',
@@ -23,7 +33,11 @@ export function RadarPage() {
     <div className="page">
       <PageHeader
         eyebrow={date}
-        title="Five opportunities worth your attention."
+        title={radar.length === 5
+          ? 'Five opportunities worth your attention.'
+          : radar.length === 1
+            ? 'One opportunity worth your attention.'
+            : `${radar.length || 'No'} opportunities worth your attention.`}
         description={`Built around ${data.profile.name}’s ${data.profile.weeklyHours}-hour week, existing projects and appetite for asymmetric bets.`}
         actions={(
           <>
@@ -35,16 +49,16 @@ export function RadarPage() {
 
       <section className="radar-summary" aria-label="Radar distribution">
         <div>
-          <span className="summary-count practical">2</span>
-          <p><strong>Practical</strong><small>High fit, manageable cost</small></p>
+          <span className="summary-count practical">{practical.count}</span>
+          <p><strong>Practical</strong><small>{practical.closest ? `${practical.closest} closest available` : 'High fit, manageable cost'}</small></p>
         </div>
         <div>
-          <span className="summary-count rare">2</span>
-          <p><strong>Rare</strong><small>Hidden, plausible advantage</small></p>
+          <span className="summary-count rare">{rare.count}</span>
+          <p><strong>Rare</strong><small>{rare.closest ? `${rare.closest} closest available` : 'Hidden, plausible advantage'}</small></p>
         </div>
         <div>
-          <span className="summary-count wildcard">1</span>
-          <p><strong>Wildcard</strong><small>Outside the obvious lane</small></p>
+          <span className="summary-count wildcard">{wildcard.count}</span>
+          <p><strong>Wildcard</strong><small>{wildcard.closest ? `${wildcard.closest} closest available` : 'Outside the obvious lane'}</small></p>
         </div>
         <aside>
           <span>Today’s thesis</span>

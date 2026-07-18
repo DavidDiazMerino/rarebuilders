@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/AppShell'
 import { DiscoverPage } from './pages/DiscoverPage'
 import { InboxPage } from './pages/InboxPage'
+import { LibraryPage } from './pages/LibraryPage'
 import { OpportunityPage } from './pages/OpportunityPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RadarPage } from './pages/RadarPage'
@@ -18,6 +19,7 @@ function ProductRoutes() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/inbox" element={<InboxPage />} />
         <Route path="/discover" element={<DiscoverPage />} />
+        <Route path="/library" element={<LibraryPage />} />
         <Route path="*" element={<Navigate to="/radar" replace />} />
       </Routes>
     </AppShell>

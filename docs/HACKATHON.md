@@ -3,7 +3,7 @@
 > **Operational source of truth for RareBuilders.** Read this before making
 > product, engineering, asset, licensing, demo, or submission decisions.
 >
-> Last verified against the official Devpost pages: **2026-07-17 (Europe/Madrid)**.
+> Last verified against the official Devpost pages: **2026-07-18 (Europe/Madrid)**.
 > The rules may change. The [Official Rules](https://openai.devpost.com/rules)
 > and official notices always override this summary, so re-check them before
 > the final submission.
@@ -343,7 +343,10 @@ Update this section as work progresses.
 - [x] Codex is being used in a primary build thread.
 - [x] GPT-5.6 has three visible, structured-output product roles.
 - [x] URL/text ingestion and a public GitHub connector are implemented.
-- [x] Feedback persists and changes the recommendation set.
+- [x] Feedback persists, uses the latest decision per opportunity and changes
+      the recommendation set.
+- [x] Hiddenness is calculated from observable signals rather than generated
+      by the model, and fallback bucket assignments are disclosed.
 - [x] Unit, build, lint and browser-journey checks pass locally.
 
 ### Eligibility blockers
@@ -374,7 +377,7 @@ Update this section as work progresses.
 
 ### Submission blockers
 
-- [ ] Draft the English Devpost description.
+- [x] Draft the English Devpost description.
 - [ ] Select screenshots that show the working product and contain no secrets.
 - [ ] Write, rehearse, record, and caption the under-three-minute demo.
 - [ ] Verify the final YouTube video is Public and its audio works.

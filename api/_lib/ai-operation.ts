@@ -1,5 +1,5 @@
-import { contentHash } from './cache.js'
-import { getCached, setCached } from './redis.js'
+import { cachedResult } from './cache.js'
+import { PublicError } from './http.js'
 import { reserveAiOperation, type AiOperation } from './quota.js'
 
 export async function runAiOperation<T>({
@@ -7,21 +7,20 @@ export async function runAiOperation<T>({
   input,
   ip,
   operation,
+  owner = false,
   create,
 }: {
   namespace: string
   input: unknown
   ip: string
   operation: AiOperation
+  owner?: boolean
   create: () => Promise<T>
 }) {
-  const key = `rarebuilders:cache:${namespace}:${contentHash(input)}`
-  const cached = await getCached<T>(key)
-  if (cached) return { data: cached, cached: true }
-
-  const quota = await reserveAiOperation(ip, operation)
-  if (!quota.ok) throw new Error(quota.reason)
-  const data = await create()
-  await setCached(key, data, 60 * 60 * 24 * 30)
-  return { data, cached: false }
+  const result = await cachedResult(namespace, input, async () => {
+    const quota = await reserveAiOperation(ip, operation, owner)
+    if (!quota.ok) throw new PublicError(quota.reason)
+    return create()
+  })
+  return { data: result.data, cached: result.cached }
 }

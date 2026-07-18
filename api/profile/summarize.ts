@@ -1,7 +1,12 @@
 import { z } from 'zod'
 import { runAiOperation } from '../_lib/ai-operation.js'
 import { clientIp, publicMessage, requestId, requireMethod, sendData, sendError } from '../_lib/http.js'
-import { MODEL, summarizeBuilderMemory } from '../_lib/openai.js'
+import {
+  builderMemoryCacheInput,
+  MODEL,
+  summarizeBuilderMemory,
+} from '../_lib/openai.js'
+import { isOwnerRequest } from '../_lib/owner-access.js'
 import type { VercelRequest, VercelResponse } from '../_lib/vercel-types.js'
 
 const requestSchema = z.object({
@@ -27,10 +32,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const body = requestSchema.parse(req.body)
     const result = await runAiOperation({
-      namespace: 'profile-v1',
-      input: body,
+      namespace: 'profile-v2',
+      input: builderMemoryCacheInput(body),
       ip: clientIp(req),
       operation: 'profile',
+      owner: isOwnerRequest(req),
       create: () => summarizeBuilderMemory(body),
     })
     sendData(res, result.data, { cached: result.cached, requestId: id, model: MODEL })

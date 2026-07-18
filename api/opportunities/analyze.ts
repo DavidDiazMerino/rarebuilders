@@ -2,7 +2,12 @@ import { z } from 'zod'
 import { builderProfileSchema } from '../../shared/domain.js'
 import { runAiOperation } from '../_lib/ai-operation.js'
 import { clientIp, publicMessage, requestId, requireMethod, sendData, sendError } from '../_lib/http.js'
-import { analyzeOpportunitySource, MODEL } from '../_lib/openai.js'
+import { isOwnerRequest } from '../_lib/owner-access.js'
+import {
+  analyzeOpportunitySource,
+  MODEL,
+  opportunityAnalysisCacheInput,
+} from '../_lib/openai.js'
 import type { VercelRequest, VercelResponse } from '../_lib/vercel-types.js'
 
 const requestSchema = z.object({
@@ -18,9 +23,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body = requestSchema.parse(req.body)
     const result = await runAiOperation({
       namespace: 'opportunity-v2',
-      input: body,
+      input: opportunityAnalysisCacheInput(body),
       ip: clientIp(req),
       operation: 'analysis',
+      owner: isOwnerRequest(req),
       create: () => analyzeOpportunitySource(body),
     })
     sendData(res, { ...result.data, sourceUrl: body.sourceUrl }, {

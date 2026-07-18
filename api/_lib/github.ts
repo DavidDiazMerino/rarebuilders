@@ -1,5 +1,6 @@
 import { getCached, setCached } from './redis.js'
 import { contentHash } from './cache.js'
+import { PublicError } from './http.js'
 
 const headers: Record<string, string> = {
   Accept: 'application/vnd.github+json',
@@ -13,10 +14,10 @@ async function githubFetch<T>(path: string): Promise<T> {
   const response = await fetch(`https://api.github.com${path}`, { headers })
   if (!response.ok) {
     if (response.status === 403 || response.status === 429) {
-      throw new Error('GitHub’s public API limit is temporarily exhausted. Try again after the reset.')
+      throw new PublicError('GitHub’s public API limit is temporarily exhausted. Try again after the reset.')
     }
-    if (response.status === 404) throw new Error('The GitHub user or repository was not found.')
-    throw new Error(`GitHub returned ${response.status}.`)
+    if (response.status === 404) throw new PublicError('The GitHub user or repository was not found.')
+    throw new PublicError(`GitHub returned ${response.status}.`)
   }
   return response.json() as Promise<T>
 }
@@ -36,7 +37,7 @@ type GithubRepoResponse = {
 export async function listPublicRepositories(username: string) {
   const cacheKey = `rarebuilders:github:user:${username.toLowerCase()}`
   const cached = await getCached<ReturnType<typeof mapRepositories>>(cacheKey)
-  if (cached) return { data: cached, cached: true }
+  if (cached !== null) return { data: cached, cached: true }
   const repos = await githubFetch<GithubRepoResponse[]>(
     `/users/${encodeURIComponent(username)}/repos?type=owner&sort=updated&per_page=30`,
   )
@@ -72,7 +73,7 @@ export async function getRepositoryContext(owner: string, repo: string) {
     topics: string[]
     readme: string
   }>(cacheKey)
-  if (cached) return { data: cached, cached: true }
+  if (cached !== null) return { data: cached, cached: true }
 
   const [detail, readme, languages] = await Promise.all([
     githubFetch<RepoDetailResponse>(`/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}`),
@@ -116,7 +117,7 @@ export async function searchOpportunityIssues(query: string) {
     : `is:open ${normalized}`
   const cacheKey = `rarebuilders:github:search:${contentHash(openQuery)}`
   const cached = await getCached<Awaited<ReturnType<typeof performIssueSearch>>>(cacheKey)
-  if (cached) return { data: cached, cached: true }
+  if (cached !== null) return { data: cached, cached: true }
   const data = await performIssueSearch(openQuery)
   await setCached(cacheKey, data, 60 * 10)
   return { data, cached: false }

@@ -12,13 +12,15 @@ import {
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import type { Opportunity } from '../../shared/domain'
+import type { ConnectorId, Opportunity, OpportunityCandidate } from '../../shared/domain'
 import { PageHeader } from '../components/PageHeader'
-import { api, type GithubOpportunityCandidate } from '../lib/api'
+import { api, type GithubOpportunityCandidate, type SourceExtraction } from '../lib/api'
+import { buildRadar } from '../lib/scoring'
+import { candidateId } from '../lib/candidates'
 import { useAppState } from '../state/AppState'
 
 export function InboxPage() {
-  const { data, addOpportunity } = useAppState()
+  const { data, addOpportunity, upsertCandidates } = useAppState()
   const navigate = useNavigate()
   const location = useLocation()
   const [sourceUrl, setSourceUrl] = useState('')
@@ -28,14 +30,46 @@ export function InboxPage() {
   const [analyzing, setAnalyzing] = useState(false)
   const [error, setError] = useState('')
   const [fetched, setFetched] = useState(false)
+  const [sourceInfo, setSourceInfo] = useState<Pick<SourceExtraction, 'method' | 'wordCount' | 'warnings'> | null>(null)
   const [preview, setPreview] = useState<Opportunity | null>(null)
+  const [activeCandidateId, setActiveCandidateId] = useState('')
+  const [activeConnector, setActiveConnector] = useState<ConnectorId>('manual')
 
   useEffect(() => {
+    if (location.search.includes('from=discover')) {
+      const raw = window.sessionStorage.getItem('rarebuilders:discovery-candidate')
+      if (!raw) return
+      try {
+        const candidate = JSON.parse(raw) as OpportunityCandidate
+        const text = candidate.sourceText || [
+          `Title: ${candidate.title}`,
+          `Organizer: ${candidate.organizer}`,
+          `Source: ${candidate.connector}`,
+          `Reward: ${candidate.reward || 'unknown'}`,
+          `Deadline: ${candidate.deadline || 'unknown'}`,
+          `Participation: ${candidate.participationModes.join(', ')}`,
+          '',
+          candidate.summary,
+        ].join('\n')
+        setSourceUrl(candidate.canonicalUrl ?? '')
+        setSourceTitle(candidate.title)
+        setSourceText(text)
+        setFetched(text.length >= 80)
+        setActiveCandidateId(candidate.id)
+        setActiveConnector(candidate.connector)
+        window.sessionStorage.removeItem('rarebuilders:discovery-candidate')
+      } catch {
+        window.sessionStorage.removeItem('rarebuilders:discovery-candidate')
+      }
+      return
+    }
     if (!location.search.includes('from=github')) return
     const raw = window.sessionStorage.getItem('rarebuilders:github-candidate')
     if (!raw) return
     try {
       const candidate = JSON.parse(raw) as GithubOpportunityCandidate
+      const id = candidateId('github', String(candidate.id))
+      const now = new Date().toISOString()
       setSourceUrl(candidate.url)
       setSourceTitle(candidate.title)
       setSourceText([
@@ -48,11 +82,32 @@ export function InboxPage() {
         candidate.body,
       ].join('\n'))
       setFetched(true)
+      setActiveCandidateId(id)
+      setActiveConnector('github')
+      upsertCandidates([{
+        id,
+        connector: 'github',
+        externalId: String(candidate.id),
+        canonicalUrl: candidate.url,
+        title: candidate.title,
+        organizer: candidate.repository,
+        summary: candidate.body.slice(0, 500),
+        deadline: null,
+        reward: '',
+        region: 'global',
+        language: 'English',
+        tags: candidate.labels,
+        participationModes: ['individual', 'team'],
+        sourceText: candidate.body.slice(0, 8_000),
+        discoveredAt: now,
+        lastSeenAt: now,
+        status: 'inspected',
+      }])
       window.sessionStorage.removeItem('rarebuilders:github-candidate')
     } catch {
       window.sessionStorage.removeItem('rarebuilders:github-candidate')
     }
-  }, [location.search])
+  }, [location.search, upsertCandidates])
 
   const fetchUrl = async () => {
     if (!sourceUrl.trim()) return
@@ -63,6 +118,11 @@ export function InboxPage() {
       setSourceUrl(result.data.url)
       setSourceTitle(result.data.title)
       setSourceText(result.data.text)
+      setSourceInfo({
+        method: result.data.method,
+        wordCount: result.data.wordCount,
+        warnings: result.data.warnings,
+      })
       setFetched(true)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'The source could not be fetched.')
@@ -84,13 +144,35 @@ export function InboxPage() {
         sourceText: sourceText.slice(0, 30_000),
         profile: data.profile,
       })
+      const id = activeCandidateId || candidateId('manual', sourceUrl.trim() || `${sourceTitle}:${sourceText.slice(0, 240)}`)
+      const now = new Date().toISOString()
       const opportunity: Opportunity = {
         ...result.data,
         id: crypto.randomUUID(),
-        discoveredAt: new Date().toISOString(),
-        verifiedAt: new Date().toISOString(),
+        candidateId: id,
+        discoveredAt: now,
+        verifiedAt: now,
         fixture: false,
       }
+      upsertCandidates([{
+        id,
+        connector: activeCandidateId ? activeConnector : 'manual',
+        externalId: sourceUrl.trim() || id,
+        canonicalUrl: sourceUrl.trim() || undefined,
+        title: opportunity.title,
+        organizer: opportunity.organizer,
+        summary: opportunity.summary,
+        deadline: opportunity.deadline,
+        reward: opportunity.reward,
+        region: opportunity.region,
+        language: opportunity.language,
+        tags: opportunity.domains,
+        participationModes: opportunity.participationModes,
+        discoveredAt: now,
+        lastSeenAt: now,
+        status: 'inspected',
+      }])
+      setActiveCandidateId(id)
       setPreview(opportunity)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'GPT-5.6 analysis failed.')
@@ -101,8 +183,11 @@ export function InboxPage() {
 
   const addPreview = () => {
     if (!preview) return
+    const nextOpportunities = [preview, ...data.opportunities.filter((item) => item.id !== preview.id)]
+    const radarIndex = buildRadar(data.profile, nextOpportunities, data.feedback)
+      .findIndex((item) => item.opportunity.id === preview.id)
     addOpportunity(preview)
-    navigate(`/opportunities/${preview.id}`)
+    navigate(`/opportunities/${preview.id}?added=1&rank=${radarIndex < 0 ? 'outside' : radarIndex + 1}`)
   }
 
   return (
@@ -133,6 +218,7 @@ export function InboxPage() {
                 onChange={(event) => {
                   setSourceUrl(event.target.value)
                   setFetched(false)
+                  setSourceInfo(null)
                 }}
                 placeholder="https://…"
               />
@@ -153,7 +239,18 @@ export function InboxPage() {
             <small>{sourceText.length.toLocaleString()} / 30,000 characters</small>
           </label>
           {error ? <div className="inline-error"><AlertTriangle size={17} /> {error}</div> : null}
-          {fetched ? <div className="inline-success"><Check size={17} /> Source extracted. Review it before analysis.</div> : null}
+          {fetched ? (
+            <div className="source-extraction-status">
+              <div className="inline-success">
+                <Check size={17} />
+                Source extracted via {sourceInfo?.method.replace('-', ' ') ?? 'connector data'}
+                {sourceInfo ? ` · ${sourceInfo.wordCount.toLocaleString()} words` : ''}. Review it before analysis.
+              </div>
+              {sourceInfo?.warnings.map((warning) => (
+                <div className="inline-warning" key={warning}><AlertTriangle size={16} /> {warning}</div>
+              ))}
+            </div>
+          ) : null}
         </section>
 
         <aside className="analysis-panel">
@@ -184,7 +281,7 @@ export function InboxPage() {
               ) : null}
               <div className="normalized-preview-actions">
                 <button className="button secondary" onClick={() => setPreview(null)}>Analyze again</button>
-                <button className="button primary" onClick={addPreview}>Add to radar <ArrowRight size={16} /></button>
+                <button className="button primary" onClick={addPreview}>Add to opportunity pool <ArrowRight size={16} /></button>
               </div>
             </div>
           ) : (

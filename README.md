@@ -17,14 +17,20 @@ Built for **OpenAI Build Week 2026** in the **Work and Productivity** track.
 
 - A deterministic, no-login demo for David's real builder context.
 - Two-step onboarding covering six decisions that materially affect ranking.
-- A daily radar of two practical, two rare and one wildcard opportunity.
+- A daily radar targeting two practical, two rare and one wildcard opportunity,
+  with “closest available” disclosure when the source pool cannot satisfy a bucket.
 - Transparent scorecards, evidence, unknowns and reasons to enter or walk away.
 - Reuse matching against an editable inventory of existing projects.
-- Save, reject and “more like this” feedback persisted in the browser.
+- Save, reject and “more like this” feedback persisted in the browser; the latest
+  decision per opportunity owns its canonical learned-domain effect.
 - Public GitHub repository discovery and bounty/issue search.
-- Safe URL or pasted-text ingestion with a normalized preview before saving.
-- GPT-5.6 builder-memory extraction from selected Markdown and public READMEs.
+- Devpost hackathon, EU Funding & Tenders and optional Kaggle discovery.
+- Safe URL, PDF or pasted-text ingestion with extraction diagnostics and a normalized preview before saving.
+- Private, review-before-applying CV extraction from PDF, DOCX or text.
+- Review-before-applying GPT-5.6 builder-memory extraction from selected Markdown and public READMEs, including explicit interests and no-go signals.
 - GPT-5.6 opportunity normalization and tailored participation strategies.
+- Persistent candidate history, decision library and visible learned preferences.
+- Daily connector refresh with a configurable personal 0/2/5 analysis budget.
 - Responsive desktop and mobile application shells.
 
 The bundled non-OpenAI opportunities are explicitly marked **Demo dataset**.
@@ -54,7 +60,7 @@ API is temporarily unavailable.
 ## How it works
 
 ```text
-Public URL / pasted call / GitHub issue / selected builder notes
+Public URL / PDF / pasted call / GitHub issue / selected builder notes
                             │
                             ▼
                   validated server endpoints
@@ -67,7 +73,8 @@ Public URL / pasted call / GitHub issue / selected builder notes
                                    ▼
                  bounded deterministic score engine
                                    ▼
-             2 practical · 2 rare · 1 wildcard
+       2 practical · 2 rare · 1 wildcard target
+          (closest alternatives are disclosed)
                                    ▼
                 feedback updates the local profile
 ```
@@ -76,8 +83,11 @@ GPT-5.6 owns the work that benefits from language understanding: extracting an
 unstructured call, identifying facts versus inferences and unknowns, building
 a factual project inventory, and proposing a source-grounded build strategy.
 Deterministic TypeScript owns schema validation, score bounds, ranking,
-deadlines, persistence, filtering and feedback learning. A model never gets to
-silently invent the final recommendation.
+deadlines, persistence, filtering and feedback learning. Hiddenness is also
+derived from observable source channel, aggregator reach, geographic scope,
+language and visible participation; its confidence and contributing factors
+are shown in the dossier. A model never gets to silently invent the final
+recommendation.
 
 The three structured-output integrations live in
 [`api/_lib/openai.ts`](api/_lib/openai.ts):
@@ -112,7 +122,11 @@ Environment variables:
 | `UPSTASH_REDIS_REST_URL` or `KV_REST_API_URL` | Live AI only | Shared cache and quota state |
 | `UPSTASH_REDIS_REST_TOKEN` or `KV_REST_API_TOKEN` | Live AI only | Upstash REST authentication |
 | `AI_GLOBAL_OPERATION_LIMIT` | No | Hard global reservation ceiling; default `40` |
+| `AI_OWNER_GLOBAL_OPERATION_LIMIT` | No | Monthly personal ceiling; default `150` |
+| `OWNER_ACCESS_CODE_SHA256` | No | Enables higher personal limits without accounts |
 | `GITHUB_TOKEN` | No | Raises public GitHub REST limits |
+| `KAGGLE_API_TOKEN` | Kaggle only | Current official Kaggle API token |
+| `KAGGLE_USERNAME` / `KAGGLE_KEY` | No | Legacy Kaggle credential fallback |
 
 Secrets never use a `VITE_` prefix and are never sent to the browser.
 
@@ -120,10 +134,11 @@ Secrets never use a `VITE_` prefix and are never sent to the browser.
 
 Live model calls fail closed unless Redis is configured. A cache lookup happens
 before quota reservation; uncached calls are limited per IP and share one
-atomic global counter. Request text and output tokens are bounded. The default
-40-call ceiling is intentionally conservative against the project's **€10
-maximum API budget**. OpenAI dashboard budgets are still configured as an
-additional alert, not treated as a hard technical control.
+atomic monthly counter. Request text and output tokens are bounded. Public
+traffic defaults to a conservative 40-call deployment ceiling; requests with
+the configured personal access code use a separate 150-call ceiling. OpenAI
+dashboard budgets are still configured as an additional alert, not treated as
+a hard technical control.
 
 ## Verification
 
@@ -144,10 +159,14 @@ The browser test exercises the exact judge journey in Chromium.
   counters.
 - Markdown/text never leaves the browser until the user reviews the selected
   files and presses **Analyze selected context**.
+- CV files are sent once as direct model input with storage disabled; the app
+  retains only the reviewed structured profile in localStorage.
 - GitHub import reads only repositories selected from a public user profile.
 - Remote URL import accepts only HTTP(S), resolves and rejects private/reserved
-  IPs, revalidates redirects, enforces an 8-second timeout and a 1 MB response
-  limit, and extracts at most 30,000 characters.
+  IPs, revalidates redirects, enforces a timeout and a 5 MB response limit, and
+  extracts at most 30,000 characters. GitHub issues, EU calls, Devpost
+  challenges and configured Kaggle competitions use source-specific adapters;
+  generic HTML preserves headings/lists and incorporates JSON-LD metadata.
 - Server responses use no-store caching and the deployment applies CSP,
   anti-framing, MIME-sniffing, referrer and permissions headers.
 
@@ -201,6 +220,10 @@ Known limitations:
 
 - broad Discord, Telegram, WeChat, X and newsletter crawling is not claimed or
   implemented;
+- Devpost discovery depends on its public listing API and fails independently
+  if that interface changes;
+- Kaggle discovery requires server credentials and its broad competition search
+  can return low-relevance results that still need human inspection;
 - GitHub public search quality depends on issue authors using useful titles and
   labels;
 - some sites block server-side page extraction, so pasted text is the reliable

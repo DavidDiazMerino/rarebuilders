@@ -77,9 +77,16 @@ The July 17 baseline was a landing-page concept with four static cards. The
 Build Week implementation now covers the promised end-to-end product loop:
 
 - two-step, six-decision onboarding and editable local builder memory;
-- optional, consent-based Markdown and public GitHub project import;
-- URL/text opportunity ingestion with safe fetching and a review step;
+- optional, consent-based Markdown and public GitHub project import with an
+  editable review of extracted interests, exploratory topics and no-go signals;
+- URL/PDF/text opportunity ingestion with source-specific adapters, extraction
+  diagnostics and a review step;
 - public GitHub issue discovery;
+- Devpost, EU Funding & Tenders and optional Kaggle discovery behind one
+  candidate contract;
+- editable CV-derived professional evidence without retaining the raw file;
+- persistent source states, full decision history and a decision library;
+- daily source refresh with a protected personal automatic-analysis budget;
 - structured GPT-5.6 profile, opportunity and strategy analysis;
 - an evidence-linked dossier with facts, inferences and unknowns;
 - bounded deterministic scoring and a 2 practical / 2 rare / 1 wildcard radar;
