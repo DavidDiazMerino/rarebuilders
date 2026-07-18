@@ -249,7 +249,7 @@ export function OpportunityPage() {
           </section>
           <section className="requirements-card">
             <p className="section-kicker">Participation cost</p>
-            <strong>{opportunity.effortHours} estimated hours</strong>
+            <strong>{opportunity.effortHours > 0 ? `${opportunity.effortHours} estimated hours` : 'Effort unknown'}</strong>
             <h3>Requirements</h3>
             <ul>{opportunity.requirements.map((item) => <li key={item}>{item}</li>)}</ul>
             <h3>Deliverables</h3>

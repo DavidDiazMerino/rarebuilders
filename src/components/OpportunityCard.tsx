@@ -40,7 +40,7 @@ export function OpportunityCard({
       <div className="deadline-row">
         <span>{formatDeadline(opportunity.deadline)}</span>
         <strong>{deadlineDistance(opportunity.deadline)}</strong>
-        <span>{opportunity.effortHours}h estimated</span>
+        <span>{opportunity.effortHours > 0 ? `${opportunity.effortHours}h estimated` : 'Effort unknown'}</span>
       </div>
       <div className="mini-scores">
         <span>Fit <strong>{evaluation.fit}</strong></span>
