@@ -1,0 +1,81 @@
+import { ArrowUpRight, Bookmark, Check, EyeOff, Sparkles } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import type { FeedbackAction, RadarItem } from '../../shared/domain'
+import { deadlineDistance, formatDeadline, sourceKindLabel } from '../lib/format'
+import { verdictLabel } from '../lib/scoring'
+
+export function OpportunityCard({
+  item,
+  currentDecision,
+  currentPreference,
+  onFeedback,
+}: {
+  item: RadarItem
+  currentDecision?: FeedbackAction
+  currentPreference?: FeedbackAction
+  onFeedback: (kind: 'decision' | 'preference', action: FeedbackAction) => void
+}) {
+  const { opportunity, evaluation, bucket, bucketMatch } = item
+  const illustrative = opportunity.provenance.mode === 'illustrative'
+  return (
+    <article className="opportunity-card">
+      <div className="opportunity-card-topline">
+        <span className={`bucket-label ${bucket}`}>{bucket}</span>
+        {bucketMatch === 'closest' ? <span className="bucket-fit">Closest available</span> : null}
+        <span className={illustrative ? 'data-label demo' : 'data-label live'}>
+          {illustrative ? 'Illustrative sample' : 'Live evidence'}
+        </span>
+      </div>
+      <div className="opportunity-card-heading">
+        <div>
+          <p className="card-source">{opportunity.organizer} · {sourceKindLabel(opportunity.sourceKind)}</p>
+          <h2><Link to={`/opportunities/${opportunity.id}`}>{opportunity.title}</Link></h2>
+        </div>
+        <div className="overall-score" aria-label={`Overall score ${evaluation.overall}`}>
+          <strong>{evaluation.overall}</strong>
+          <span>edge</span>
+        </div>
+      </div>
+      <p className="card-summary">{opportunity.summary}</p>
+      <div className="deadline-row">
+        <span>{formatDeadline(opportunity.deadline)}</span>
+        <strong>{deadlineDistance(opportunity.deadline)}</strong>
+        <span>{opportunity.effortHours}h estimated</span>
+      </div>
+      <div className="mini-scores">
+        <span>Fit <strong>{evaluation.fit}</strong></span>
+        <span>Win signal <strong>{evaluation.winSignal}</strong></span>
+        <span>Hiddenness <strong>{evaluation.hiddenness}</strong></span>
+        <span>Confidence <strong>{evaluation.confidence}</strong></span>
+      </div>
+      <div className="recommendation-line">
+        <span className={`verdict ${evaluation.verdict}`}>{verdictLabel[evaluation.verdict]}</span>
+        <p>{evaluation.reasonsFor[0]}</p>
+      </div>
+      <footer className="card-actions">
+        <button
+          className={currentDecision === 'saved' ? 'compact-action selected' : 'compact-action'}
+          onClick={() => onFeedback('decision', 'saved')}
+        >
+          {currentDecision === 'saved' ? <Check size={15} /> : <Bookmark size={15} />}
+          Save
+        </button>
+        <button
+          className={currentDecision === 'passed' ? 'compact-action selected' : 'compact-action'}
+          onClick={() => onFeedback('decision', 'passed')}
+        >
+          <EyeOff size={15} /> Pass
+        </button>
+        <button
+          className={currentPreference === 'more-like' ? 'compact-action selected' : 'compact-action'}
+          onClick={() => onFeedback('preference', 'more-like')}
+        >
+          <Sparkles size={15} /> More like this
+        </button>
+        <Link className="open-link" to={`/opportunities/${opportunity.id}`}>
+          Open dossier <ArrowUpRight size={16} />
+        </Link>
+      </footer>
+    </article>
+  )
+}
