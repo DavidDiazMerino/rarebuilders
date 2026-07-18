@@ -232,4 +232,8 @@ test('golden path imports the UNESCO call as live evidence without sending the p
   await page.getByRole('button', { name: /add to opportunity pool/i }).click()
   await expect(page.getByText(/live evidence/i)).toBeVisible()
   await expect(page.getByText('UNESCO', { exact: true })).toBeVisible()
+  await page.getByRole('link', { name: 'Today’s radar', exact: true }).click()
+  await expect(page.getByText(/live radar active/i)).toBeVisible()
+  await expect(page.getByText(/add 4 more live sources/i)).toBeVisible()
+  await expect(page.locator('.opportunity-card')).toHaveCount(1)
 })

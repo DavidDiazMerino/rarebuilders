@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { extractHtmlSource, fetchPublicSource } from './safe-fetch'
+import {
+  extractHtmlSource,
+  fetchPublicSource,
+  matchDevpostChallenge,
+  matchKaggleCompetition,
+} from './safe-fetch'
 
 describe('safe source fetching', () => {
   it.each([
@@ -74,5 +79,25 @@ describe('safe source fetching', () => {
     expect(result.text).toContain('End date: 2026-09-01T17:00:00+02:00')
     expect(result.text).toContain('Organizer: Madrid Data Lab')
     expect(result.text).toContain('## Main source content')
+  })
+
+  it('does not substitute a different Devpost challenge when the requested host is absent', () => {
+    const candidates = [{
+      id: 1,
+      title: 'Another challenge',
+      url: 'https://another-challenge.devpost.com/',
+    }]
+
+    expect(matchDevpostChallenge(
+      new URL('https://requested-challenge.devpost.com/'),
+      candidates,
+    )).toBeUndefined()
+  })
+
+  it('does not substitute a different Kaggle competition when the requested ref is absent', () => {
+    expect(matchKaggleCompetition('requested-competition', [{
+      ref: 'another-competition',
+      title: 'Another competition',
+    }])).toBeUndefined()
   })
 })
