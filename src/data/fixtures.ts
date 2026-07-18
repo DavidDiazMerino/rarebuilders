@@ -220,7 +220,7 @@ export const demoOpportunities: Opportunity[] = [
     title: 'Independent publishing discovery grant',
     organizer: 'Ibero-American reading foundation',
     sourceLabel: 'Curated demo · newsletter pattern',
-    sourceUrl: 'https://www.unesco.org/en/creativity',
+    sourceUrl: 'https://www.unesco.org/creativity/en/international-fund-cultural-diversity',
     sourceKind: 'demo',
     discoveredAt: now,
     verifiedAt: now,
