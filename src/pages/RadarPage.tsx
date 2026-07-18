@@ -31,6 +31,9 @@ export function RadarPage() {
   const practical = bucketSummary('practical')
   const rare = bucketSummary('rare')
   const wildcard = bucketSummary('wildcard')
+  const liveCount = data.opportunities.filter((opportunity) => opportunity.provenance.mode === 'live').length
+  const illustrativeCount = data.opportunities.length - liveCount
+  const usingLiveOnly = liveCount > 0 && illustrativeCount > 0
   const date = new Intl.DateTimeFormat('en', {
     weekday: 'long',
     month: 'long',
@@ -54,6 +57,16 @@ export function RadarPage() {
           </>
         )}
       />
+      {usingLiveOnly ? (
+        <div className="pool-confirmation live-pool-notice" role="status">
+          <span>
+            <strong>Live radar active.</strong> You added {liveCount} live source{liveCount === 1 ? '' : 's'},
+            so {illustrativeCount} sample pattern{illustrativeCount === 1 ? ' is' : 's are'} hidden rather than mixed into a real decision.
+            {liveCount < 5 ? ` Add ${5 - liveCount} more live source${5 - liveCount === 1 ? '' : 's'} to rebuild a full five-item radar.` : ''}
+          </span>
+          <Link to="/inbox">Add live source</Link>
+        </div>
+      ) : null}
       {feedbackNotice ? (
         <div className="pool-confirmation" role="status">
           <span>

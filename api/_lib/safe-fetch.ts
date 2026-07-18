@@ -522,6 +522,16 @@ type DevpostSource = {
   displayed_location?: { location?: string }
 }
 
+export function matchDevpostChallenge(url: URL, candidates: DevpostSource[]) {
+  return candidates.find((candidate) => {
+    try {
+      return new URL(candidate.url).hostname.toLowerCase() === url.hostname.toLowerCase()
+    } catch {
+      return false
+    }
+  })
+}
+
 async function fetchDevpostChallenge(url: URL): Promise<SourceExtraction | null> {
   if (!url.hostname.toLowerCase().endsWith('.devpost.com')) return null
   const slug = url.hostname.split('.')[0]
@@ -535,13 +545,7 @@ async function fetchDevpostChallenge(url: URL): Promise<SourceExtraction | null>
   })
   if (!response.ok) return null
   const payload = await readJson<{ hackathons?: DevpostSource[] }>(response)
-  const item = (payload.hackathons ?? []).find((candidate) => {
-    try {
-      return new URL(candidate.url).hostname.toLowerCase() === url.hostname.toLowerCase()
-    } catch {
-      return false
-    }
-  }) ?? payload.hackathons?.[0]
+  const item = matchDevpostChallenge(url, payload.hackathons ?? [])
   if (!item) return null
   const text = normalizeText([
     `Title: ${item.title}`,
@@ -577,6 +581,10 @@ type KaggleSource = {
   tags?: Array<{ name?: string; ref?: string }>
 }
 
+export function matchKaggleCompetition(slug: string, competitions: KaggleSource[]) {
+  return competitions.find((competition) => competition.ref === slug)
+}
+
 async function fetchKaggleCompetition(url: URL): Promise<SourceExtraction | null> {
   if (url.hostname.toLowerCase() !== 'www.kaggle.com' && url.hostname.toLowerCase() !== 'kaggle.com') return null
   const match = url.pathname.match(/^\/competitions\/([^/?#]+)/)
@@ -597,7 +605,7 @@ async function fetchKaggleCompetition(url: URL): Promise<SourceExtraction | null
   })
   if (!response.ok) return null
   const payload = await readJson<KaggleSource[]>(response)
-  const item = payload.find((competition) => competition.ref === slug) ?? payload[0]
+  const item = matchKaggleCompetition(slug, payload)
   if (!item?.title) return null
   const text = normalizeText([
     `Title: ${item.title}`,

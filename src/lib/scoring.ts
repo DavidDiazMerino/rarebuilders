@@ -464,21 +464,6 @@ export function createFeedback(
   }
 }
 
-export function applyFeedbackLearning(profile: BuilderProfile, event: FeedbackEvent): BuilderProfile {
-  const feedback = [event]
-  return {
-    ...profile,
-    learnedDomainWeights: {
-      ...canonicalLearnedDomainWeights(profile.learnedDomainWeights),
-      ...learnedDomainWeightsFromFeedback(feedback),
-    },
-    learnedConstraintWeights: {
-      ...profile.learnedConstraintWeights,
-      ...learnedConstraintWeightsFromFeedback(feedback),
-    },
-  }
-}
-
 export const verdictLabel: Record<Verdict, string> = {
   enter: 'Enter',
   investigate: 'Investigate',
