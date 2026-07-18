@@ -142,7 +142,6 @@ export function InboxPage() {
       const result = await api.analyzeOpportunity({
         sourceUrl: sourceUrl.trim(),
         sourceText: sourceText.slice(0, 30_000),
-        profile: data.profile,
       })
       const id = activeCandidateId || candidateId('manual', sourceUrl.trim() || `${sourceTitle}:${sourceText.slice(0, 240)}`)
       const now = new Date().toISOString()
@@ -152,7 +151,14 @@ export function InboxPage() {
         candidateId: id,
         discoveredAt: now,
         verifiedAt: now,
-        fixture: false,
+        provenance: {
+          mode: 'live',
+          evidenceRole: sourceUrl.trim() ? 'primary' : 'pasted',
+          connector: activeCandidateId ? activeConnector : 'manual',
+          method: sourceInfo?.method ?? 'plain-text',
+          wordCount: sourceInfo?.wordCount ?? sourceText.trim().split(/\s+/).length,
+          warnings: sourceInfo?.warnings ?? [],
+        },
       }
       upsertCandidates([{
         id,

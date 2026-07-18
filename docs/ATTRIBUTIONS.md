@@ -35,12 +35,9 @@ audit date.
 
 ## Data
 
-- **OpenAI Build Week:** fixture facts link to the official Devpost page and
-  exist to compare a crowded, strategically valuable opportunity. Verify them
-  against the primary source before submission.
-- **Other bundled opportunities:** original curated demo patterns written for
-  RareBuilders. They are marked `fixture: true`, labelled “Demo dataset” in the
-  UI and must not be described as live competitions.
+- **Bundled opportunities:** original neutral reference patterns written for
+  RareBuilders. They carry illustrative provenance, are labelled “Illustrative
+  sample” in the UI and must not be described as current live calls.
 - **Builder projects:** short factual summaries derived from the entrant's own
   local project READMEs (Reseñas.lat, StarForge, PorraHub / Oráculo and AGI
   Noel). No private source content is bundled.

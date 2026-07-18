@@ -6,15 +6,22 @@ import type {
   CandidateStatus,
   CareerProfile,
   ConnectorId,
+  ConnectorState,
   FeedbackAction,
+  FeedbackKind,
+  FeedbackReason,
   Opportunity,
   OpportunityCandidate,
   Strategy,
 } from '../../shared/domain'
 import { mergeBuilderMemory, type BuilderMemoryImport } from '../lib/builder-memory'
 import { retainCandidateHistory } from '../lib/candidates'
-import { createFeedback, learnedDomainWeightsFromFeedback } from '../lib/scoring'
-import { emptyPersonalProfile, initialAppData, loadAppData, saveAppData } from '../lib/storage'
+import {
+  createFeedback,
+  learnedConstraintWeightsFromFeedback,
+  learnedDomainWeightsFromFeedback,
+} from '../lib/scoring'
+import { demoAppData, initialAppData, loadAppData, personalAppData, saveAppData } from '../lib/storage'
 
 type Action =
   | { type: 'enter-mode'; mode: 'demo' | 'personal' }
@@ -27,17 +34,25 @@ type Action =
   | { type: 'upsert-candidates'; candidates: OpportunityCandidate[] }
   | { type: 'candidate-status'; candidateId: string; status: CandidateStatus; opportunityId?: string }
   | { type: 'settings'; settings: AppSettings }
-  | { type: 'connector-refresh'; connector: ConnectorId; refreshedAt: string }
+  | { type: 'connector-state'; connector: ConnectorId; connectorState: ConnectorState }
   | { type: 'add-opportunity'; opportunity: Opportunity }
-  | { type: 'feedback'; opportunity: Opportunity; action: FeedbackAction; reason?: string }
+  | {
+      type: 'feedback'
+      opportunity: Opportunity
+      kind: FeedbackKind
+      action: FeedbackAction
+      reasonCode?: FeedbackReason
+      note?: string
+    }
+  | { type: 'undo-feedback'; opportunityId: string; kind: FeedbackKind }
   | { type: 'reset-learning' }
   | { type: 'strategy'; opportunityId: string; strategy: Strategy }
   | { type: 'reset' }
 
 function reducer(state: AppData, action: Action): AppData {
   if (action.type === 'enter-mode') {
-    if (action.mode === 'demo') return { ...initialAppData(), mode: 'demo' }
-    return { ...initialAppData(), mode: 'personal', profile: emptyPersonalProfile() }
+    if (action.mode === 'demo') return { ...demoAppData(), mode: 'demo' }
+    return personalAppData()
   }
   if (action.type === 'update-profile') return { ...state, profile: action.profile }
   if (action.type === 'update-career') {
@@ -73,10 +88,10 @@ function reducer(state: AppData, action: Action): AppData {
     }
   }
   if (action.type === 'settings') return { ...state, settings: action.settings }
-  if (action.type === 'connector-refresh') {
+  if (action.type === 'connector-state') {
     return {
       ...state,
-      connectorRefresh: { ...state.connectorRefresh, [action.connector]: action.refreshedAt },
+      connectorState: { ...state.connectorState, [action.connector]: action.connectorState },
     }
   }
   if (action.type === 'add-opportunity') {
@@ -92,15 +107,42 @@ function reducer(state: AppData, action: Action): AppData {
     }
   }
   if (action.type === 'feedback') {
-    const latest = [...state.feedback].reverse().find((event) => event.opportunityId === action.opportunity.id)
-    if (latest?.action === action.action && latest.reason === action.reason) return state
-    const event = createFeedback(action.opportunity, action.action, action.reason)
+    const latest = [...state.feedback].reverse().find((event) =>
+      event.opportunityId === action.opportunity.id && event.kind === action.kind)
+    if (
+      latest?.action === action.action
+      && latest.reasonCode === action.reasonCode
+      && latest.note === action.note
+    ) return state
+    const event = createFeedback(
+      action.opportunity,
+      action.kind,
+      action.action,
+      action.reasonCode,
+      action.note,
+    )
     const feedback = [...state.feedback, event]
     return {
       ...state,
       profile: {
         ...state.profile,
         learnedDomainWeights: learnedDomainWeightsFromFeedback(feedback),
+        learnedConstraintWeights: learnedConstraintWeightsFromFeedback(feedback),
+      },
+      feedback,
+    }
+  }
+  if (action.type === 'undo-feedback') {
+    const index = state.feedback.findLastIndex((event) =>
+      event.opportunityId === action.opportunityId && event.kind === action.kind)
+    if (index < 0) return state
+    const feedback = state.feedback.filter((_, eventIndex) => eventIndex !== index)
+    return {
+      ...state,
+      profile: {
+        ...state.profile,
+        learnedDomainWeights: learnedDomainWeightsFromFeedback(feedback),
+        learnedConstraintWeights: learnedConstraintWeightsFromFeedback(feedback),
       },
       feedback,
     }
@@ -108,7 +150,11 @@ function reducer(state: AppData, action: Action): AppData {
   if (action.type === 'reset-learning') {
     return {
       ...state,
-      profile: { ...state.profile, learnedDomainWeights: {} },
+      profile: {
+        ...state.profile,
+        learnedDomainWeights: {},
+        learnedConstraintWeights: {},
+      },
       feedback: [],
     }
   }
@@ -127,9 +173,16 @@ type AppStateValue = {
   upsertCandidates: (candidates: OpportunityCandidate[]) => void
   updateCandidateStatus: (candidateId: string, status: CandidateStatus, opportunityId?: string) => void
   updateSettings: (settings: AppSettings) => void
-  markConnectorRefresh: (connector: ConnectorId, refreshedAt: string) => void
+  updateConnectorState: (connector: ConnectorId, connectorState: ConnectorState) => void
   addOpportunity: (opportunity: Opportunity) => void
-  recordFeedback: (opportunity: Opportunity, action: FeedbackAction, reason?: string) => void
+  recordFeedback: (
+    opportunity: Opportunity,
+    kind: FeedbackKind,
+    action: FeedbackAction,
+    reasonCode?: FeedbackReason,
+    note?: string,
+  ) => void
+  undoFeedback: (opportunityId: string, kind: FeedbackKind) => void
   resetLearning: () => void
   saveStrategy: (opportunityId: string, strategy: Strategy) => void
   reset: () => void
@@ -153,10 +206,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     updateCandidateStatus: (candidateId, status, opportunityId) =>
       dispatch({ type: 'candidate-status', candidateId, status, opportunityId }),
     updateSettings: (settings) => dispatch({ type: 'settings', settings }),
-    markConnectorRefresh: (connector, refreshedAt) =>
-      dispatch({ type: 'connector-refresh', connector, refreshedAt }),
+    updateConnectorState: (connector, connectorState) =>
+      dispatch({ type: 'connector-state', connector, connectorState }),
     addOpportunity: (opportunity) => dispatch({ type: 'add-opportunity', opportunity }),
-    recordFeedback: (opportunity, action, reason) => dispatch({ type: 'feedback', opportunity, action, reason }),
+    recordFeedback: (opportunity, kind, action, reasonCode, note) =>
+      dispatch({ type: 'feedback', opportunity, kind, action, reasonCode, note }),
+    undoFeedback: (opportunityId, kind) => dispatch({ type: 'undo-feedback', opportunityId, kind }),
     resetLearning: () => dispatch({ type: 'reset-learning' }),
     saveStrategy: (opportunityId, strategy) => dispatch({ type: 'strategy', opportunityId, strategy }),
     reset: () => dispatch({ type: 'reset' }),

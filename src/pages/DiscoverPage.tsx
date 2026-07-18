@@ -18,7 +18,7 @@ import {
   type OpportunityCandidate,
 } from '../../shared/domain'
 import { PageHeader } from '../components/PageHeader'
-import { api, type ConnectorSearchResult } from '../lib/api'
+import { api, ApiRequestError, type ConnectorSearchResult } from '../lib/api'
 import { candidatePreFitDetails, profileDiscoveryFocus } from '../lib/candidates'
 import { useAppState } from '../state/AppState'
 
@@ -38,13 +38,13 @@ const presets = [
 
 export function DiscoverPage() {
   const navigate = useNavigate()
-  const { data, upsertCandidates, updateCandidateStatus, markConnectorRefresh } = useAppState()
+  const { data, upsertCandidates, updateCandidateStatus, updateConnectorState } = useAppState()
   const [query, setQuery] = useState('')
   const [selectedConnectors, setSelectedConnectors] = useState<AutomatedConnectorId[]>(
     [...automatedConnectorIds],
   )
   const [connectorResults, setConnectorResults] = useState<ConnectorSearchResult[]>([])
-  const [statusFilter, setStatusFilter] = useState<'all' | OpportunityCandidate['status']>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | OpportunityCandidate['status']>('new')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const profileFocus = useMemo(() => profileDiscoveryFocus(data.profile), [data.profile])
@@ -54,7 +54,8 @@ export function DiscoverPage() {
     .filter((candidate) => candidate.connector !== 'manual' && selectedConnectors.includes(candidate.connector))
     .filter((candidate) => statusFilter === 'all' || candidate.status === statusFilter)
     .map((candidate) => ({ candidate, preFit: candidatePreFitDetails(data.profile, candidate) }))
-    .sort((left, right) => right.preFit.score - left.preFit.score), [
+    .sort((left, right) => right.preFit.score - left.preFit.score)
+    .slice(0, 25), [
     data.candidates,
     data.profile,
     selectedConnectors,
@@ -66,19 +67,42 @@ export function DiscoverPage() {
     setLoading(true)
     setError('')
     setQuery(nextQuery)
+    const attemptedAt = new Date().toISOString()
+    selectedConnectors.forEach((connector) => updateConnectorState(connector, {
+      ...data.connectorState[connector],
+      status: 'refreshing',
+      lastAttemptAt: attemptedAt,
+    }))
     try {
       const response = await api.discover(selectedConnectors, nextQuery)
       setConnectorResults(response.data)
       const candidates = response.data.flatMap((result) => result.candidates)
       upsertCandidates(candidates)
       const refreshedAt = new Date().toISOString()
-      response.data
-        .filter((result) => !result.error || !result.configured)
-        .forEach((result) => markConnectorRefresh(result.connector, refreshedAt))
+      response.data.forEach((result) => updateConnectorState(result.connector, {
+        status: !result.configured
+          ? 'setup-needed'
+          : result.error
+            ? /429|rate|quota/i.test(result.error) ? 'limited' : 'error'
+            : 'ready',
+        lastAttemptAt: attemptedAt,
+        lastSuccessAt: result.error ? data.connectorState[result.connector]?.lastSuccessAt : refreshedAt,
+        error: result.error,
+      }))
       if (!candidates.length && response.data.every((result) => result.error)) {
         setError('Every selected connector failed. Existing source history is still available.')
       }
     } catch (caught) {
+      const retryAt = caught instanceof ApiRequestError && caught.retryAfter
+        ? new Date(Date.now() + caught.retryAfter * 1_000).toISOString()
+        : undefined
+      selectedConnectors.forEach((connector) => updateConnectorState(connector, {
+        ...data.connectorState[connector],
+        status: caught instanceof ApiRequestError && caught.status === 429 ? 'limited' : 'error',
+        lastAttemptAt: attemptedAt,
+        retryAt,
+        error: caught instanceof Error ? caught.message : 'Discovery failed.',
+      }))
       setError(caught instanceof Error ? caught.message : 'Discovery failed.')
     } finally {
       setLoading(false)
@@ -109,6 +133,7 @@ export function DiscoverPage() {
           {connectorLabels.map((connector) => {
             const selected = selectedConnectors.includes(connector.id)
             const result = connectorResults.find((item) => item.connector === connector.id)
+            const state = data.connectorState[connector.id]
             return (
               <button
                 key={connector.id}
@@ -119,7 +144,8 @@ export function DiscoverPage() {
               >
                 {selected ? <Check size={14} /> : null}
                 <span>{connector.label}</span>
-                {result?.error ? <em>{result.configured ? 'error' : 'setup needed'}</em> : null}
+                {state?.status && state.status !== 'idle' ? <em>{state.status.replace('-', ' ')}</em> : null}
+                {!state && result?.error ? <em>{result.configured ? 'error' : 'setup needed'}</em> : null}
               </button>
             )
           })}
@@ -169,7 +195,7 @@ export function DiscoverPage() {
           </div>
         ) : null}
         <div className="discover-filters">
-          <span>{visibleCandidates.length} candidates in local history</span>
+          <span>Showing up to 25 ranked candidates · decisions remain in local history</span>
           <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}>
             <option value="all">All states</option>
             <option value="new">New</option>
@@ -227,6 +253,11 @@ export function DiscoverPage() {
                   <button className="button primary" onClick={() => inspect(candidate)}>
                     {candidate.status === 'added' ? 'Reinspect' : 'Inspect candidate'} <ArrowRight size={16} />
                   </button>
+                  {candidate.status !== 'added' ? (
+                    <button className="button secondary" onClick={() => updateCandidateStatus(candidate.id, 'dismissed')}>
+                      Dismiss
+                    </button>
+                  ) : null}
                 </div>
               </div>
             </article>

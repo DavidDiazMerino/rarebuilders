@@ -126,6 +126,20 @@ export function candidatePreFit(profile: BuilderProfile, candidate: OpportunityC
   return candidatePreFitDetails(profile, candidate).score
 }
 
+export function canonicalCandidateKey(candidate: OpportunityCandidate) {
+  if (candidate.canonicalUrl) {
+    try {
+      const url = new URL(candidate.canonicalUrl)
+      url.hash = ''
+      url.search = ''
+      return `url:${url.hostname.toLowerCase()}${url.pathname.replace(/\/+$/, '').toLowerCase()}`
+    } catch {
+      // Fall through to a stable title/organizer fingerprint.
+    }
+  }
+  return `text:${normalize(candidate.organizer)}:${normalize(candidate.title)}`
+}
+
 export function profileDiscoveryFocus(profile: BuilderProfile) {
   const priorities = [
     ...profile.domains,
@@ -142,11 +156,22 @@ export function retainCandidateHistory(candidates: OpportunityCandidate[]) {
   const recentFirst = [...candidates].sort(
     (left, right) => Date.parse(right.lastSeenAt) - Date.parse(left.lastSeenAt),
   )
-  const decisions = recentFirst
+  const deduplicated = new Map<string, OpportunityCandidate>()
+  for (const candidate of recentFirst) {
+    const key = canonicalCandidateKey(candidate)
+    const existing = deduplicated.get(key)
+    if (!existing || (existing.status === 'new' && candidate.status !== 'new')) {
+      deduplicated.set(key, candidate)
+    }
+  }
+  const unique = [...deduplicated.values()].sort(
+    (left, right) => Date.parse(right.lastSeenAt) - Date.parse(left.lastSeenAt),
+  )
+  const decisions = unique
     .filter((candidate) => candidate.status !== 'new')
     .slice(0, 100)
   const freshPerConnector = new Map<ConnectorId, number>()
-  const fresh = recentFirst.filter((candidate) => {
+  const fresh = unique.filter((candidate) => {
     if (candidate.status !== 'new') return false
     const count = freshPerConnector.get(candidate.connector) ?? 0
     if (count >= 30) return false
@@ -154,5 +179,5 @@ export function retainCandidateHistory(candidates: OpportunityCandidate[]) {
     return true
   })
   const kept = new Map([...decisions, ...fresh].map((candidate) => [candidate.id, candidate]))
-  return recentFirst.filter((candidate) => kept.has(candidate.id))
+  return unique.filter((candidate) => kept.has(candidate.id))
 }

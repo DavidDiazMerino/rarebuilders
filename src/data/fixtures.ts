@@ -73,6 +73,7 @@ export const demoProfile: BuilderProfile = {
   connectedGithubRepositories: [],
   careerProfile: emptyCareerProfile(),
   learnedDomainWeights: {},
+  learnedConstraintWeights: {},
   onboardingComplete: true,
 }
 
@@ -101,8 +102,6 @@ export const demoOpportunities: Opportunity[] = [
     applicationBurden: 'medium',
     domains: ['ai', 'developer-tools', 'work-productivity'],
     effortHours: 34,
-    hiddennessBase: 8,
-    strategicValueBase: 94,
     confidence: 98,
     unknowns: ['Final judge testing depth'],
     evidence: [
@@ -110,7 +109,14 @@ export const demoOpportunities: Opportunity[] = [
       { label: 'Saturation', value: 'Very high visible participation', kind: 'inference' },
     ],
     summary: 'A crowded global launchpad with unusually high strategic value for demonstrating RareBuilders itself.',
-    fixture: true,
+    provenance: {
+      mode: 'illustrative',
+      evidenceRole: 'reference-pattern',
+      connector: 'devpost',
+      method: 'fixture',
+      wordCount: null,
+      warnings: ['Illustrative snapshot; verify the official rules before deciding.'],
+    },
   },
   {
     id: 'oss-agent-bounty',
@@ -136,8 +142,6 @@ export const demoOpportunities: Opportunity[] = [
     applicationBurden: 'low',
     domains: ['ai-agents', 'developer-tools', 'open-source'],
     effortHours: 14,
-    hiddennessBase: 84,
-    strategicValueBase: 82,
     confidence: 66,
     unknowns: ['Exact number of active entrants'],
     evidence: [
@@ -145,7 +149,14 @@ export const demoOpportunities: Opportunity[] = [
       { label: 'Participant count', value: 'Estimated from visible reactions and forks', kind: 'inference' },
     ],
     summary: 'A narrow technical bounty where existing agent experience creates more leverage than broad hackathon polish.',
-    fixture: true,
+    provenance: {
+      mode: 'illustrative',
+      evidenceRole: 'reference-pattern',
+      connector: 'github',
+      method: 'fixture',
+      wordCount: null,
+      warnings: ['Fictional scenario based on a GitHub issue pattern.'],
+    },
   },
   {
     id: 'eu-civic-pdf',
@@ -171,15 +182,20 @@ export const demoOpportunities: Opportunity[] = [
     applicationBurden: 'medium',
     domains: ['civic-tech', 'ai', 'education'],
     effortHours: 20,
-    hiddennessBase: 78,
-    strategicValueBase: 75,
     confidence: 58,
     unknowns: ['Applicant volume', 'Whether individuals may apply'],
     evidence: [
       { label: 'Language edge', value: 'Spanish-first call with regional distribution', kind: 'inference' },
     ],
     summary: 'A regional call with low discoverability and a credible path for an explainable document agent.',
-    fixture: true,
+    provenance: {
+      mode: 'illustrative',
+      evidenceRole: 'reference-pattern',
+      connector: 'eu',
+      method: 'fixture',
+      wordCount: null,
+      warnings: ['Fictional scenario based on a regional call pattern.'],
+    },
   },
   {
     id: 'wearable-watchface',
@@ -205,15 +221,20 @@ export const demoOpportunities: Opportunity[] = [
     applicationBurden: 'low',
     domains: ['hardware', 'creative-tech', 'developer-tools'],
     effortHours: 10,
-    hiddennessBase: 91,
-    strategicValueBase: 69,
     confidence: 61,
     unknowns: ['Hardware shipping window'],
     evidence: [
       { label: 'Community size', value: 'Small firmware community', kind: 'inference' },
     ],
     summary: 'A small physical wildcard that could turn the RareBuilders radar into a memorable wearable artifact.',
-    fixture: true,
+    provenance: {
+      mode: 'illustrative',
+      evidenceRole: 'reference-pattern',
+      connector: 'github',
+      method: 'fixture',
+      wordCount: null,
+      warnings: ['Fictional scenario based on a community challenge pattern.'],
+    },
   },
   {
     id: 'book-discovery-grant',
@@ -239,15 +260,20 @@ export const demoOpportunities: Opportunity[] = [
     applicationBurden: 'medium',
     domains: ['publishing', 'communities', 'education'],
     effortHours: 12,
-    hiddennessBase: 72,
-    strategicValueBase: 88,
     confidence: 72,
     unknowns: ['Commercial entity eligibility'],
     evidence: [
       { label: 'Existing leverage', value: 'Reseñas.lat already serves authors and readers', kind: 'inference' },
     ],
     summary: 'A direct reuse opportunity for Reseñas.lat with regional and language advantages.',
-    fixture: true,
+    provenance: {
+      mode: 'illustrative',
+      evidenceRole: 'reference-pattern',
+      connector: 'manual',
+      method: 'fixture',
+      wordCount: null,
+      warnings: ['Fictional scenario; the linked page is a reference pattern, not this grant.'],
+    },
   },
   {
     id: 'music-tools-challenge',
@@ -273,15 +299,20 @@ export const demoOpportunities: Opportunity[] = [
     applicationBurden: 'medium',
     domains: ['music', 'creative-tech', 'ai-tools'],
     effortHours: 15,
-    hiddennessBase: 77,
-    strategicValueBase: 74,
     confidence: 70,
     unknowns: ['Travel support'],
     evidence: [
       { label: 'Reusable asset', value: 'StarForge already contains an audio pipeline', kind: 'inference' },
     ],
     summary: 'A compact creative-tech venue where StarForge can become a distinctive live demo.',
-    fixture: true,
+    provenance: {
+      mode: 'illustrative',
+      evidenceRole: 'reference-pattern',
+      connector: 'github',
+      method: 'fixture',
+      wordCount: null,
+      warnings: ['Fictional scenario based on a community calendar pattern.'],
+    },
   },
   {
     id: 'climate-data-sprint',
@@ -307,15 +338,20 @@ export const demoOpportunities: Opportunity[] = [
     applicationBurden: 'low',
     domains: ['climate', 'data-visualization', 'civic-tech'],
     effortHours: 18,
-    hiddennessBase: 68,
-    strategicValueBase: 62,
     confidence: 64,
     unknowns: ['Data quality by city'],
     evidence: [
       { label: 'Domain fit', value: 'Outside the core profile but compatible with a wildcard', kind: 'inference' },
     ],
     summary: 'A plausible wildcard: unfamiliar domain, bounded artifact, and public impact.',
-    fixture: true,
+    provenance: {
+      mode: 'illustrative',
+      evidenceRole: 'reference-pattern',
+      connector: 'manual',
+      method: 'fixture',
+      wordCount: null,
+      warnings: ['Fictional scenario based on a civic newsletter pattern.'],
+    },
   },
   {
     id: 'education-agent-call',
@@ -341,19 +377,77 @@ export const demoOpportunities: Opportunity[] = [
     applicationBurden: 'medium',
     domains: ['education', 'ai-agents', 'work-productivity'],
     effortHours: 16,
-    hiddennessBase: 63,
-    strategicValueBase: 79,
     confidence: 76,
     unknowns: ['Required school partnership'],
     evidence: [
       { label: 'Skill match', value: 'Agent workflows and publishing experience', kind: 'inference' },
     ],
     summary: 'A practical agent opportunity with a credible audience and manageable prototype.',
-    fixture: true,
+    provenance: {
+      mode: 'illustrative',
+      evidenceRole: 'reference-pattern',
+      connector: 'manual',
+      method: 'fixture',
+      wordCount: null,
+      warnings: ['Fictional scenario based on an education pilot pattern.'],
+    },
   },
 ]
 
+const personalSampleIds = new Set([
+  'oss-agent-bounty',
+  'eu-civic-pdf',
+  'music-tools-challenge',
+  'climate-data-sprint',
+  'education-agent-call',
+])
+
+const neutralSummaries: Record<string, string> = {
+  'oss-agent-bounty': 'An illustrative open-source bounty used to preview technical fit and source trust.',
+  'eu-civic-pdf': 'An illustrative regional microgrant used to preview eligibility and language signals.',
+  'music-tools-challenge': 'An illustrative community challenge used to preview creative and team constraints.',
+  'climate-data-sprint': 'An illustrative public-data sprint used to preview wildcard recommendations.',
+  'education-agent-call': 'An illustrative pilot used to preview effort, participation and evidence quality.',
+}
+
+export const personalSampleOpportunities: Opportunity[] = demoOpportunities
+  .filter((opportunity) => personalSampleIds.has(opportunity.id))
+  .map((opportunity) => ({
+    ...structuredClone(opportunity),
+    id: `sample-${opportunity.id}`,
+    organizer: 'Illustrative sample',
+    sourceLabel: 'Fictional scenario · no primary source',
+    sourceUrl: '',
+    deadline: null,
+    timezone: null,
+    summary: neutralSummaries[opportunity.id],
+    unknowns: ['This is an illustrative sample. Add a live source before making a real decision.'],
+    evidence: [{
+      label: 'Sample status',
+      value: 'Synthetic fields for previewing RareBuilders; not a real opportunity.',
+      kind: 'inference',
+    }],
+    provenance: {
+      mode: 'illustrative',
+      evidenceRole: 'reference-pattern',
+      connector: 'manual',
+      method: 'fixture',
+      wordCount: null,
+      warnings: ['Illustrative sample with no external evidence.'],
+    },
+  }))
+
 export const demoStrategies: Record<string, Strategy> = {
+  'education-agent-call': {
+    headline: 'Reuse the agent workflow as a narrow teacher-support pilot.',
+    angle: 'Start with one repetitive planning task, keep a human approval step, and measure time saved rather than claiming broad educational impact.',
+    whyNow: 'The current builder memory already contains agent workflows and evaluation practices that reduce greenfield effort.',
+    leverage: ['Existing agent orchestration patterns', 'Documented evaluation workflows', 'A manageable pilot scope'],
+    risks: ['Teacher access still needs confirmation', 'Student data must stay out of the prototype', 'Impact evidence needs a baseline'],
+    firstSteps: ['Verify the official eligibility and deadline.', 'Choose one teacher workflow with a measurable baseline.', 'Build a thin approval-first prototype using existing agent components.'],
+    model: 'GPT-5.6 Luna · cached demo result',
+    generatedAt: now,
+  },
   'openai-build-week': {
     headline: 'Use the crowded event to launch the tool that explains why crowded events are not always the best bet.',
     angle: 'Demo RareBuilders on its own submission: compare OpenAI Build Week with an obscure opportunity, then show the personalized decision and reusable project leverage.',

@@ -34,9 +34,9 @@ decision inspectable. A large competition may score high on strategic value
 and low on hiddenness; a small bounty may reverse that balance. Hiddenness is
 calculated from observable channel, aggregator, reach, region, language and
 participation signals, with its confidence and factors visible in the dossier.
-The user sees the trade rather than one magical percentage. Feedback changes a
-local builder model, so rejecting an opportunity actually changes the next
-radar.
+The user sees the trade rather than one magical percentage. Decisions change
+the shortlist, while separate preferences change the local builder model.
+Structured pass reasons tune constraints; private notes never go to GPT.
 
 The product has a reliable manual URL/text path, live public GitHub discovery,
 and clearly labelled fixtures. It does not pretend to crawl private Discord,
@@ -49,13 +49,16 @@ GPT-5.6 performs three essential structured-output tasks:
 1. Build an editable project inventory from only the Markdown notes and public
    repositories the user explicitly selects.
 2. Normalize an unstructured opportunity into source-linked facts, inferences,
-   requirements, deadlines, uncertainty and a strategic-value input.
+   requirements, deadlines and material uncertainty. It does not rank or
+   invent Hiddenness.
 3. Generate a builder-specific participation angle, hard risks and exactly
    three first actions using existing assets.
 
-TypeScript validates every model record and owns score bounds, filtering,
-ranking, persistence and feedback learning. Cached results protect the judge
-path; per-IP and global Redis reservations protect the API budget.
+TypeScript validates every model record and deterministically owns Fit,
+Hiddenness, Win Signal, Strategic Value, Effort, Risk, hard gates, ranking,
+persistence and feedback learning. Factual opportunity analysis is cached by
+source evidence—not by the mutable profile—and atomic Redis reservations
+protect the API budget.
 
 ## Codex
 
@@ -121,7 +124,9 @@ and surfaces what still needs verification.”
 
 ### 1:48–2:13 — GPT-5.6
 
-Show the cached strategy, then the add-source workbench.
+Show the cached strategy, then import this exact source in the add-source
+workbench:
+`https://www.unesco.org/creativity/en/international-fund-cultural-diversity`.
 
 “GPT-5.6 is the language intelligence layer. It converts an unstructured call
 into a validated record, builds an editable inventory from explicitly selected
@@ -130,12 +135,13 @@ three first actions. Deterministic code owns the final bounds and ranking.”
 
 ### 2:13–2:31 — feedback
 
-Return to radar and reject one item.
+Return to radar, pass one item, undo it, then mark “more like this.”
 
-“When I say ‘not for me,’ the opportunity disappears, canonical learned domain
-weights change, and the next candidate is promoted. Replacing that decision
-replaces its learning effect rather than stacking contradictory votes. This is
-a recommender, not a dead form.”
+“My decision and what I want the radar to learn are separate. Passing promotes
+the next candidate; a structured reason tunes a relevant constraint. More or
+less like this changes canonical domain preferences. The latest signal replaces
+its previous effect instead of stacking contradictory votes, and private notes
+never leave this browser.”
 
 ### 2:31–2:48 — Codex and close
 

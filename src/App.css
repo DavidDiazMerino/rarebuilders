@@ -1152,6 +1152,59 @@
   gap: 0.7rem;
 }
 
+.verification-status {
+  width: fit-content;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 0.25rem 0.45rem;
+  color: var(--ink-faint);
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.verification-status.verified {
+  color: #31583b;
+  background: #d7eadb;
+}
+
+.score-explanation {
+  border-top: 1px solid var(--line);
+  padding-top: 0.7rem;
+}
+
+.score-explanation summary {
+  cursor: pointer;
+  font-size: 0.65rem;
+  font-weight: 700;
+}
+
+.score-explanation > div {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.8rem;
+}
+
+.score-explanation p {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.2rem 0.5rem;
+  margin: 0;
+  font-size: 0.62rem;
+}
+
+.score-explanation p em {
+  font-style: normal;
+  font-weight: 700;
+}
+
+.score-explanation p small {
+  grid-column: 1 / -1;
+  color: var(--ink-faint);
+  line-height: 1.35;
+}
+
 .score-bar-label {
   display: flex;
   justify-content: space-between;
@@ -1371,6 +1424,109 @@
 }
 
 .memory-import,
+.memory-editor {
+  display: grid;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--ink);
+  padding: 1.1rem;
+  background: var(--paper-bright);
+}
+
+.memory-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.memory-editor label,
+.memory-editor-section {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.memory-editor label > span {
+  color: var(--ink-faint);
+  font-size: 0.58rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.memory-editor input,
+.memory-editor textarea,
+.memory-editor select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 0.25rem;
+  padding: 0.6rem;
+  color: var(--ink);
+  background: var(--white);
+}
+
+.memory-editor textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.memory-editor-section {
+  border-top: 1px solid var(--line);
+  padding-top: 0.9rem;
+}
+
+.memory-editor-section .section-heading button,
+.editable-chip-list button,
+.remove-memory-item,
+.memory-editor-section .connected-repository button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 0;
+  color: var(--ink-faint);
+  background: transparent;
+  cursor: pointer;
+}
+
+.section-heading.compact {
+  margin-top: 0.8rem;
+}
+
+.editable-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.editable-chip-list > div {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  background: var(--white);
+}
+
+.editable-chip-list input {
+  border: 0;
+}
+
+.memory-edit-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  border: 1px solid var(--line);
+  padding: 0.75rem 2.3rem 0.75rem 0.75rem;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.memory-edit-card > textarea {
+  grid-column: 1 / -1;
+}
+
+.remove-memory-item {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.45rem;
+}
+
 .project-inventory {
   border: 1px solid var(--line);
   padding: 1.3rem;
@@ -2923,7 +3079,9 @@
   .first-steps,
   .dossier-sidebar,
   .constraint-grid,
-  .profile-overview {
+  .profile-overview,
+  .memory-editor-grid,
+  .memory-edit-card {
     grid-template-columns: 1fr;
   }
 

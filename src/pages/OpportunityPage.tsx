@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
+import type { FeedbackReason } from '../../shared/domain'
 import { ScoreBar } from '../components/ScoreBar'
 import { api } from '../lib/api'
 import { deadlineDistance, formatDeadline } from '../lib/format'
@@ -27,7 +28,8 @@ export function OpportunityPage() {
   const [generating, setGenerating] = useState(false)
   const [error, setError] = useState('')
   const [rejecting, setRejecting] = useState(false)
-  const [decisionReason, setDecisionReason] = useState('')
+  const [passReason, setPassReason] = useState<FeedbackReason>('time')
+  const [decisionNote, setDecisionNote] = useState('')
 
   const evaluation = useMemo(
     () => opportunity ? evaluateOpportunity(data.profile, opportunity) : null,
@@ -44,8 +46,12 @@ export function OpportunityPage() {
   }
 
   const strategy = data.strategies[opportunity.id]
-  const currentDecision = [...data.feedback].reverse().find((event) => event.opportunityId === opportunity.id)
+  const currentDecision = [...data.feedback].reverse().find((event) =>
+    event.opportunityId === opportunity.id && event.kind === 'decision')
+  const currentPreference = [...data.feedback].reverse().find((event) =>
+    event.opportunityId === opportunity.id && event.kind === 'preference')
   const hasPublicSource = /^https?:\/\//i.test(opportunity.sourceUrl)
+  const illustrative = opportunity.provenance.mode === 'illustrative'
   const matchedProjects = evaluation.matchedProjectIds
     .map((id) => data.profile.projects.find((project) => project.id === id))
     .filter((project) => project !== undefined)
@@ -81,8 +87,8 @@ export function OpportunityPage() {
       <header className="dossier-header">
         <div>
           <div className="dossier-topline">
-            <span className={opportunity.fixture ? 'data-label demo' : 'data-label live'}>
-              {opportunity.fixture ? 'Curated demo data' : 'GPT-5.6 normalized'}
+            <span className={illustrative ? 'data-label demo' : 'data-label live'}>
+              {illustrative ? 'Illustrative sample' : 'Live evidence · normalized'}
             </span>
             <span>{opportunity.region} · {opportunity.language}</span>
           </div>
@@ -103,10 +109,16 @@ export function OpportunityPage() {
         <div><CheckCircle2 size={17} /><span><small>Confidence</small><strong>{evaluation.confidence}/100</strong></span></div>
         {hasPublicSource ? (
           <a href={opportunity.sourceUrl} target="_blank" rel="noreferrer">
-            <ExternalLink size={17} /><span><small>Primary source</small><strong>Open evidence</strong></span>
+            <ExternalLink size={17} /><span>
+              <small>{opportunity.provenance.evidenceRole === 'primary' ? 'Primary source' : 'Reference pattern'}</small>
+              <strong>Open evidence</strong>
+            </span>
           </a>
         ) : (
-          <div><ExternalLink size={17} /><span><small>Primary source</small><strong>Pasted evidence</strong></span></div>
+          <div><ExternalLink size={17} /><span>
+            <small>{illustrative ? 'Evidence status' : 'Source evidence'}</small>
+            <strong>{illustrative ? 'Illustrative only' : 'Pasted evidence'}</strong>
+          </span></div>
         )}
       </section>
 
@@ -195,6 +207,9 @@ export function OpportunityPage() {
         <aside className="dossier-sidebar">
           <section className="scorecard">
             <p className="section-kicker">Signal stack</p>
+            <p className={`verification-status ${evaluation.verificationStatus}`}>
+              {evaluation.verificationStatus.replace('-', ' ')}
+            </p>
             <ScoreBar label="Personal fit" value={evaluation.fit} tone="acid" />
             <ScoreBar label="Win signal" value={evaluation.winSignal} />
             <ScoreBar label="Hiddenness" value={evaluation.hiddenness} tone="warm" />
@@ -210,6 +225,27 @@ export function OpportunityPage() {
             <ScoreBar label="Strategic value" value={evaluation.strategicValue} />
             <ScoreBar label="Effort fit" value={evaluation.effortFit} />
             <ScoreBar label="Risk" value={evaluation.risk} tone="warm" />
+            <details className="score-explanation">
+              <summary>How every score was calculated</summary>
+              {([
+                ['Fit', evaluation.fitFactors],
+                ['Win signal', evaluation.winFactors],
+                ['Strategic value', evaluation.strategicFactors],
+                ['Effort fit', evaluation.effortFactors],
+                ['Risk', evaluation.riskFactors],
+              ] as const).map(([label, factors]) => (
+                <div key={label}>
+                  <strong>{label}</strong>
+                  {factors.map((scoreFactor) => (
+                    <p key={`${label}-${scoreFactor.label}`}>
+                      <span>{scoreFactor.label}</span>
+                      <em>{scoreFactor.impact > 0 ? '+' : ''}{scoreFactor.impact}</em>
+                      <small>{scoreFactor.evidence}</small>
+                    </p>
+                  ))}
+                </div>
+              ))}
+            </details>
           </section>
           <section className="requirements-card">
             <p className="section-kicker">Participation cost</p>
@@ -220,33 +256,56 @@ export function OpportunityPage() {
             <ul>{opportunity.deliverables.map((item) => <li key={item}>{item}</li>)}</ul>
           </section>
           <section className="sidebar-actions">
-            <button className={currentDecision?.action === 'saved' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'saved')}>
+            <p className="section-kicker">My decision</p>
+            <button className={currentDecision?.action === 'saved' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'decision', 'saved')}>
               <Bookmark size={16} /> Save
             </button>
-            <button className={currentDecision?.action === 'entered' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'entered')}>
+            <button className={currentDecision?.action === 'entered' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'decision', 'entered')}>
               <Flag size={16} /> I entered
             </button>
-            <button className={currentDecision?.action === 'more-like-this' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'more-like-this')}>
-              <MoreHorizontal size={16} /> More like this
-            </button>
-            <button className={currentDecision?.action === 'rejected' ? 'selected' : ''} onClick={() => setRejecting((value) => !value)}>
+            <button className={currentDecision?.action === 'passed' ? 'selected' : ''} onClick={() => setRejecting((value) => !value)}>
               <EyeOff size={16} /> Not for me
             </button>
             {rejecting ? (
               <div className="decision-reason">
+                <label htmlFor="pass-reason">Main reason</label>
+                <select
+                  id="pass-reason"
+                  value={passReason}
+                  onChange={(event) => setPassReason(event.target.value as FeedbackReason)}
+                >
+                  <option value="time">Too much time</option>
+                  <option value="reward">Reward is not worth it</option>
+                  <option value="eligibility">Eligibility does not fit</option>
+                  <option value="team">Team requirements</option>
+                  <option value="deadline">Deadline is too close</option>
+                  <option value="source-trust">I do not trust the source yet</option>
+                  <option value="domain-fit">Wrong domain for me</option>
+                  <option value="other">Something else</option>
+                </select>
                 <textarea
-                  value={decisionReason}
-                  onChange={(event) => setDecisionReason(event.target.value.slice(0, 500))}
-                  placeholder="Optional reason — this helps the radar learn."
+                  value={decisionNote}
+                  onChange={(event) => setDecisionNote(event.target.value.slice(0, 500))}
+                  placeholder="Optional private note — never sent to the model."
                 />
                 <button onClick={() => {
-                  recordFeedback(opportunity, 'rejected', decisionReason.trim() || undefined)
+                  recordFeedback(
+                    opportunity,
+                    'decision',
+                    'passed',
+                    passReason,
+                    decisionNote.trim() || undefined,
+                  )
                   setRejecting(false)
-                }}>Confirm rejection</button>
+                }}>Confirm pass</button>
               </div>
             ) : null}
-            <button className={currentDecision?.action === 'ignored' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'ignored')}>
-              Ignore quietly
+            <p className="section-kicker">Teach the radar</p>
+            <button className={currentPreference?.action === 'more-like' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'preference', 'more-like')}>
+              <MoreHorizontal size={16} /> More like this
+            </button>
+            <button className={currentPreference?.action === 'less-like' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'preference', 'less-like')}>
+              <EyeOff size={16} /> Less like this
             </button>
             {hasPublicSource ? (
               <a href={opportunity.sourceUrl} target="_blank" rel="noreferrer">Verify source <ArrowUpRight size={16} /></a>

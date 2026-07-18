@@ -16,7 +16,7 @@ describe('local application storage', () => {
     window.localStorage.setItem(STORAGE_KEY, '{"version":99,"profile":null}')
 
     const restored = loadAppData()
-    expect(restored.version).toBe(2)
+    expect(restored.version).toBe(3)
     expect(restored.mode).toBeNull()
     expect(restored.profile.name).toBe('David')
   })
@@ -97,6 +97,6 @@ describe('local application storage', () => {
       ],
     }))
 
-    expect(loadAppData().profile.learnedDomainWeights).toEqual({ 'ai-agents': -5 })
+    expect(loadAppData().profile.learnedDomainWeights).toEqual({ 'ai-agents': 0 })
   })
 })

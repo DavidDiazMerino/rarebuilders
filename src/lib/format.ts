@@ -20,5 +20,5 @@ export function deadlineDistance(value: string | null) {
 }
 
 export function sourceKindLabel(kind: string) {
-  return kind === 'demo' ? 'Curated demo data' : kind.replace('-', ' ')
+  return kind === 'demo' ? 'Illustrative pattern' : kind.replace('-', ' ')
 }

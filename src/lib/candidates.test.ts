@@ -75,6 +75,8 @@ describe('candidate preselection', () => {
       ...candidate,
       id: `candidate-${index}`,
       externalId: String(index),
+      canonicalUrl: `https://example.com/opportunity/${index}`,
+      title: `Opportunity ${index}`,
       lastSeenAt: new Date(Date.UTC(2026, 6, 17, 12, index)).toISOString(),
     }))
     history[0] = { ...history[0], status: 'added' }

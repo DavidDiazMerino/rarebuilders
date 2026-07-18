@@ -10,29 +10,23 @@ import {
 const analysisInput = {
   sourceUrl: 'https://example.com/call',
   sourceText: 'A sufficiently detailed opportunity source with eligibility, requirements, reward and deadline.',
-  profile: demoProfile,
 }
 
 describe('AI cache identity', () => {
-  it('ignores feedback-only profile state that is not sent to the model', () => {
+  it('keeps learned feedback out of every model-visible builder context', () => {
     const learnedProfile = {
       ...demoProfile,
       learnedDomainWeights: { 'ai-agents': 15 },
+      learnedConstraintWeights: { time: 12 },
     }
 
     expect(modelBuilderContext(learnedProfile)).toEqual(modelBuilderContext(demoProfile))
-    expect(contentHash(opportunityAnalysisCacheInput({
-      ...analysisInput,
-      profile: learnedProfile,
-    }))).toBe(contentHash(opportunityAnalysisCacheInput(analysisInput)))
   })
 
-  it('invalidates analysis when model-visible builder context changes', () => {
-    const changedProfile = { ...demoProfile, weeklyHours: demoProfile.weeklyHours + 1 }
-
+  it('keys factual analysis only by the supplied source', () => {
     expect(contentHash(opportunityAnalysisCacheInput({
       ...analysisInput,
-      profile: changedProfile,
+      sourceText: `${analysisInput.sourceText} Changed evidence.`,
     }))).not.toBe(contentHash(opportunityAnalysisCacheInput(analysisInput)))
   })
 

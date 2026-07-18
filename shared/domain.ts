@@ -98,6 +98,7 @@ export const builderProfileSchema = z.object({
   connectedGithubRepositories: z.array(connectedGithubRepositorySchema).default([]),
   careerProfile: careerProfileSchema.default(emptyCareerProfile),
   learnedDomainWeights: z.record(z.string(), z.number()),
+  learnedConstraintWeights: z.record(z.string(), z.number()).default({}),
   onboardingComplete: z.boolean(),
 })
 export type BuilderProfile = z.infer<typeof builderProfileSchema>
@@ -108,6 +109,25 @@ export const evidenceSchema = z.object({
   kind: z.enum(['fact', 'inference']),
 })
 export type Evidence = z.infer<typeof evidenceSchema>
+
+export const opportunityProvenanceSchema = z.object({
+  mode: z.enum(['live', 'illustrative']),
+  evidenceRole: z.enum(['primary', 'reference-pattern', 'pasted']),
+  connector: z.enum(['manual', 'github', 'devpost', 'eu', 'kaggle']),
+  method: z.enum([
+    'github-api',
+    'eu-api',
+    'devpost-api',
+    'kaggle-api',
+    'semantic-html',
+    'plain-text',
+    'pdf',
+    'fixture',
+  ]),
+  wordCount: z.number().int().nonnegative().nullable(),
+  warnings: z.array(z.string()),
+})
+export type OpportunityProvenance = z.infer<typeof opportunityProvenanceSchema>
 
 export const opportunitySchema = z.object({
   id: z.string(),
@@ -134,24 +154,23 @@ export const opportunitySchema = z.object({
   applicationBurden: z.enum(['low', 'medium', 'high', 'unknown']).default('unknown'),
   domains: z.array(z.string()),
   effortHours: z.number().min(0).max(1000),
-  hiddennessBase: z.number().min(0).max(100),
-  strategicValueBase: z.number().min(0).max(100),
   confidence: z.number().min(0).max(100),
   unknowns: z.array(z.string()),
   evidence: z.array(evidenceSchema),
   summary: z.string(),
-  fixture: z.boolean(),
+  provenance: opportunityProvenanceSchema,
 })
 export type Opportunity = z.infer<typeof opportunitySchema>
 
-export const verdictSchema = z.enum(['enter', 'investigate', 'monitor', 'recycle', 'ignore'])
+export const verdictSchema = z.enum(['enter', 'investigate', 'monitor', 'recycle', 'ignore', 'closed'])
 export type Verdict = z.infer<typeof verdictSchema>
 
-export const hiddennessFactorSchema = z.object({
+export const scoreFactorSchema = z.object({
   label: z.string(),
   impact: z.number().min(-100).max(100),
   evidence: z.string(),
 })
+export type ScoreFactor = z.infer<typeof scoreFactorSchema>
 
 export const evaluationSchema = z.object({
   opportunityId: z.string(),
@@ -159,7 +178,7 @@ export const evaluationSchema = z.object({
   winSignal: z.number().min(0).max(100),
   hiddenness: z.number().min(0).max(100),
   hiddennessConfidence: z.number().min(0).max(100),
-  hiddennessFactors: z.array(hiddennessFactorSchema),
+  hiddennessFactors: z.array(scoreFactorSchema),
   strategicValue: z.number().min(0).max(100),
   effortFit: z.number().min(0).max(100),
   risk: z.number().min(0).max(100),
@@ -169,17 +188,38 @@ export const evaluationSchema = z.object({
   reasonsFor: z.array(z.string()),
   reasonsAgainst: z.array(z.string()),
   matchedProjectIds: z.array(z.string()),
+  verificationStatus: z.enum(['verified', 'needs-review', 'closed']),
+  fitFactors: z.array(scoreFactorSchema),
+  winFactors: z.array(scoreFactorSchema),
+  strategicFactors: z.array(scoreFactorSchema),
+  effortFactors: z.array(scoreFactorSchema),
+  riskFactors: z.array(scoreFactorSchema),
 })
 export type OpportunityEvaluation = z.infer<typeof evaluationSchema>
 
-export const feedbackActionSchema = z.enum(['saved', 'rejected', 'more-like-this', 'entered', 'ignored'])
+export const feedbackKindSchema = z.enum(['decision', 'preference'])
+export type FeedbackKind = z.infer<typeof feedbackKindSchema>
+export const feedbackActionSchema = z.enum(['saved', 'entered', 'passed', 'more-like', 'less-like', 'clear'])
 export type FeedbackAction = z.infer<typeof feedbackActionSchema>
+export const feedbackReasonSchema = z.enum([
+  'time',
+  'reward',
+  'eligibility',
+  'team',
+  'deadline',
+  'source-trust',
+  'domain-fit',
+  'other',
+])
+export type FeedbackReason = z.infer<typeof feedbackReasonSchema>
 
 export const feedbackEventSchema = z.object({
   id: z.string(),
   opportunityId: z.string(),
+  kind: feedbackKindSchema,
   action: feedbackActionSchema,
-  reason: z.string().optional(),
+  reasonCode: feedbackReasonSchema.optional(),
+  note: z.string().max(500).optional(),
   domains: z.array(z.string()),
   createdAt: z.string(),
 })
@@ -220,6 +260,15 @@ export const appSettingsSchema = z.object({
   autoAnalysisBudget: z.union([z.literal(0), z.literal(2), z.literal(5)]).default(0),
 }).default({ autoAnalysisBudget: 0 })
 export type AppSettings = z.infer<typeof appSettingsSchema>
+
+export const connectorStateSchema = z.object({
+  status: z.enum(['idle', 'refreshing', 'ready', 'limited', 'error', 'setup-needed']),
+  lastAttemptAt: z.string().optional(),
+  lastSuccessAt: z.string().optional(),
+  retryAt: z.string().optional(),
+  error: z.string().optional(),
+})
+export type ConnectorState = z.infer<typeof connectorStateSchema>
 
 export const strategySchema = z.object({
   headline: z.string(),
@@ -265,19 +314,19 @@ export const opportunityAnalysisSchema = opportunitySchema.omit({
   candidateId: true,
   discoveredAt: true,
   verifiedAt: true,
-  fixture: true,
+  provenance: true,
 })
 export type OpportunityAnalysis = z.infer<typeof opportunityAnalysisSchema>
 
 export type AppData = {
-  version: 2
+  version: 3
   profile: BuilderProfile
   opportunities: Opportunity[]
   candidates: OpportunityCandidate[]
   feedback: FeedbackEvent[]
   strategies: Record<string, Strategy>
   settings: AppSettings
-  connectorRefresh: Partial<Record<ConnectorId, string>>
+  connectorState: Partial<Record<ConnectorId, ConnectorState>>
   mode: 'demo' | 'personal' | null
 }
 
@@ -285,6 +334,12 @@ export type ApiMeta = {
   cached: boolean
   requestId: string
   model?: string
+  quota?: {
+    operation: 'profile' | 'analysis' | 'strategy'
+    remaining: number
+    limit: number
+    resetAt: string
+  }
 }
 
 export type ApiSuccess<T> = {
@@ -297,5 +352,6 @@ export type ApiFailure = {
     code: string
     message: string
     requestId: string
+    retryAfter?: number
   }
 }

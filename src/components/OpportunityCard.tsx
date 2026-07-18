@@ -1,4 +1,4 @@
-import { ArrowUpRight, Bookmark, Check, EyeOff, MoreHorizontal } from 'lucide-react'
+import { ArrowUpRight, Bookmark, Check, EyeOff, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { FeedbackAction, RadarItem } from '../../shared/domain'
 import { deadlineDistance, formatDeadline, sourceKindLabel } from '../lib/format'
@@ -6,21 +6,24 @@ import { verdictLabel } from '../lib/scoring'
 
 export function OpportunityCard({
   item,
-  currentFeedback,
+  currentDecision,
+  currentPreference,
   onFeedback,
 }: {
   item: RadarItem
-  currentFeedback?: FeedbackAction
-  onFeedback: (action: FeedbackAction) => void
+  currentDecision?: FeedbackAction
+  currentPreference?: FeedbackAction
+  onFeedback: (kind: 'decision' | 'preference', action: FeedbackAction) => void
 }) {
   const { opportunity, evaluation, bucket, bucketMatch } = item
+  const illustrative = opportunity.provenance.mode === 'illustrative'
   return (
     <article className="opportunity-card">
       <div className="opportunity-card-topline">
         <span className={`bucket-label ${bucket}`}>{bucket}</span>
         {bucketMatch === 'closest' ? <span className="bucket-fit">Closest available</span> : null}
-        <span className={opportunity.fixture ? 'data-label demo' : 'data-label live'}>
-          {opportunity.fixture ? 'Demo dataset' : 'Live source'}
+        <span className={illustrative ? 'data-label demo' : 'data-label live'}>
+          {illustrative ? 'Illustrative sample' : 'Live evidence'}
         </span>
       </div>
       <div className="opportunity-card-heading">
@@ -51,23 +54,23 @@ export function OpportunityCard({
       </div>
       <footer className="card-actions">
         <button
-          className={currentFeedback === 'saved' ? 'compact-action selected' : 'compact-action'}
-          onClick={() => onFeedback('saved')}
+          className={currentDecision === 'saved' ? 'compact-action selected' : 'compact-action'}
+          onClick={() => onFeedback('decision', 'saved')}
         >
-          {currentFeedback === 'saved' ? <Check size={15} /> : <Bookmark size={15} />}
+          {currentDecision === 'saved' ? <Check size={15} /> : <Bookmark size={15} />}
           Save
         </button>
         <button
-          className={currentFeedback === 'rejected' ? 'compact-action selected' : 'compact-action'}
-          onClick={() => onFeedback('rejected')}
+          className={currentDecision === 'passed' ? 'compact-action selected' : 'compact-action'}
+          onClick={() => onFeedback('decision', 'passed')}
         >
-          <EyeOff size={15} /> Not for me
+          <EyeOff size={15} /> Pass
         </button>
         <button
-          className={currentFeedback === 'more-like-this' ? 'compact-action selected' : 'compact-action'}
-          onClick={() => onFeedback('more-like-this')}
+          className={currentPreference === 'more-like' ? 'compact-action selected' : 'compact-action'}
+          onClick={() => onFeedback('preference', 'more-like')}
         >
-          <MoreHorizontal size={15} /> More like this
+          <Sparkles size={15} /> More like this
         </button>
         <Link className="open-link" to={`/opportunities/${opportunity.id}`}>
           Open dossier <ArrowUpRight size={16} />

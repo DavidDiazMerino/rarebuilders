@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { reserveAiOperation } from '../_lib/quota.js'
+import { aiQuotaMeta, reserveAiOperation } from '../_lib/quota.js'
 import { clientIp, PublicError, publicMessage, requestId, requireMethod, sendData, sendError } from '../_lib/http.js'
 import { analyzeCareerDocument, MODEL } from '../_lib/openai.js'
 import { isOwnerRequest } from '../_lib/owner-access.js'
@@ -29,7 +29,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const quota = await reserveAiOperation(clientIp(req), 'profile', isOwnerRequest(req))
     if (!quota.ok) throw new PublicError(quota.reason)
     const data = await analyzeCareerDocument(body)
-    sendData(res, data, { cached: false, requestId: id, model: MODEL })
+    sendData(res, data, {
+      cached: false,
+      requestId: id,
+      model: MODEL,
+      quota: aiQuotaMeta('profile', quota),
+    })
   } catch (error) {
     const message = error instanceof z.ZodError
       ? 'Supported CV formats are PDF, DOC, DOCX, TXT and Markdown up to 2 MB.'

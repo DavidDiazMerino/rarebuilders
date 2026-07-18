@@ -11,6 +11,18 @@ import type {
   Strategy,
 } from '../../shared/domain'
 
+export class ApiRequestError extends Error {
+  status: number
+  retryAfter?: number
+
+  constructor(message: string, status: number, retryAfter?: number) {
+    super(message)
+    this.name = 'ApiRequestError'
+    this.status = status
+    this.retryAfter = retryAfter
+  }
+}
+
 async function request<T>(url: string, init?: RequestInit): Promise<ApiSuccess<T>> {
   const ownerCode = typeof window === 'undefined'
     ? ''
@@ -26,7 +38,11 @@ async function request<T>(url: string, init?: RequestInit): Promise<ApiSuccess<T
   const payload = await response.json() as ApiSuccess<T> | ApiFailure
   if (!response.ok || 'error' in payload) {
     const message = 'error' in payload ? payload.error.message : 'The request failed.'
-    throw new Error(message)
+    const retryHeader = Number(response.headers.get('Retry-After'))
+    const retryAfter = Number.isFinite(retryHeader) && retryHeader > 0
+      ? retryHeader
+      : 'error' in payload ? payload.error.retryAfter : undefined
+    throw new ApiRequestError(message, response.status, retryAfter)
   }
   return payload
 }
@@ -103,7 +119,7 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ url }),
     }),
-  analyzeOpportunity: (input: { sourceUrl: string; sourceText: string; profile: BuilderProfile }) =>
+  analyzeOpportunity: (input: { sourceUrl: string; sourceText: string }) =>
     request<OpportunityAnalysis>('/api/opportunities/analyze', {
       method: 'POST',
       body: JSON.stringify(input),

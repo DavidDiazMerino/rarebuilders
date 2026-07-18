@@ -15,14 +15,16 @@ Built for **OpenAI Build Week 2026** in the **Work and Productivity** track.
 
 ## What works
 
-- A deterministic, no-login demo for David's real builder context.
+- A deterministic, no-login demo for David's builder context using clearly
+  labelled illustrative opportunity samples.
 - Two-step onboarding covering six decisions that materially affect ranking.
 - A daily radar targeting two practical, two rare and one wildcard opportunity,
   with “closest available” disclosure when the source pool cannot satisfy a bucket.
 - Transparent scorecards, evidence, unknowns and reasons to enter or walk away.
 - Reuse matching against an editable inventory of existing projects.
-- Save, reject and “more like this” feedback persisted in the browser; the latest
-  decision per opportunity owns its canonical learned-domain effect.
+- Decisions (saved, entered, passed) and preferences (more/less like this) are
+  stored separately. Structured pass reasons teach constraints without sending
+  private notes to GPT.
 - Public GitHub repository discovery and bounty/issue search.
 - Devpost hackathon, EU Funding & Tenders and optional Kaggle discovery.
 - Safe URL, PDF or pasted-text ingestion with extraction diagnostics and a normalized preview before saving.
@@ -33,9 +35,10 @@ Built for **OpenAI Build Week 2026** in the **Work and Productivity** track.
 - Daily connector refresh with a configurable personal 0/2/5 analysis budget.
 - Responsive desktop and mobile application shells.
 
-The bundled non-OpenAI opportunities are explicitly marked **Demo dataset**.
-They are plausible fixture patterns, not claims that those competitions exist.
-The URL/text importer and GitHub connector are the real ingestion paths.
+The bundled opportunities are explicitly marked **Illustrative sample**. They
+are reference patterns, not claims that those calls currently exist. Once a
+personal profile adds any live opportunity, illustrative samples leave its
+radar entirely.
 
 ## Judge path
 
@@ -47,8 +50,8 @@ The core product can be tested without an account or API key:
 4. Open **Independent publishing discovery grant**.
 5. Inspect the argument for and against, project leverage, evidence and cached
    GPT-5.6 strategy.
-6. Return to the radar and select **Not for me**; the item disappears and the
-   next candidate is promoted.
+6. Return to the radar and select **Pass**; the item disappears, the next
+   candidate is promoted, and the action can be undone.
 7. Open **Discover** to search current public GitHub bounty issues.
 8. Reset from the lower-left profile control and choose **Build my profile** to
    test the personalized path.
@@ -56,6 +59,13 @@ The core product can be tested without an account or API key:
 Live GPT-5.6 buttons require the server environment described below. Cached
 demo results intentionally keep the main judging path reliable if an external
 API is temporarily unavailable.
+
+The live golden path uses this exact primary source:
+`https://www.unesco.org/creativity/en/international-fund-cultural-diversity`.
+Open **Add source**, fetch that URL, review the extracted text, analyze it,
+inspect the normalized preview, and add it to the pool. Opportunity analysis is
+factual and profile-independent, so identical evidence reuses the same cache
+even after feedback changes.
 
 ## How it works
 
@@ -76,7 +86,7 @@ Public URL / PDF / pasted call / GitHub issue / selected builder notes
        2 practical · 2 rare · 1 wildcard target
           (closest alternatives are disclosed)
                                    ▼
-                feedback updates the local profile
+          structured feedback updates the local profile
 ```
 
 GPT-5.6 owns the work that benefits from language understanding: extracting an
@@ -154,14 +164,16 @@ The browser test exercises the exact judge journey in Chromium.
 
 ## Storage, privacy and security
 
-- The builder profile, projects, feedback and decisions stay in localStorage.
+- The builder profile, projects, private feedback notes and decisions stay in
+  localStorage and can be edited, reset, exported or imported.
 - Upstash stores content-hash cache keys, model results and anonymous quota
   counters.
 - Markdown/text never leaves the browser until the user reviews the selected
   files and presses **Analyze selected context**.
 - CV files are sent once as direct model input with storage disabled; the app
   retains only the reviewed structured profile in localStorage.
-- GitHub import reads only repositories selected from a public user profile.
+- GitHub import reads only repositories selected from a public user profile;
+  loading a username never preselects repositories.
 - Remote URL import accepts only HTTP(S), resolves and rejects private/reserved
   IPs, revalidates redirects, enforces a timeout and a 5 MB response limit, and
   extracts at most 30,000 characters. GitHub issues, EU calls, Devpost

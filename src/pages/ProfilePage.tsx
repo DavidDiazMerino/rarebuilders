@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { builderProfileSchema } from '../../shared/domain'
 import type {
   BuilderProfile,
   CareerProfile,
@@ -26,6 +27,7 @@ import type {
   RewardPreference,
   TeamMode,
 } from '../../shared/domain'
+import { BuilderMemoryEditor } from '../components/BuilderMemoryEditor'
 import { PageHeader } from '../components/PageHeader'
 import { api, type GithubRepository, type NoteInput } from '../lib/api'
 import { useAppState } from '../state/AppState'
@@ -218,6 +220,7 @@ export function ProfilePage() {
   } = useAppState()
   const navigate = useNavigate()
   const [editing, setEditing] = useState(false)
+  const [editingMemory, setEditingMemory] = useState(false)
   const [notes, setNotes] = useState<NoteDraft[]>([])
   const [githubUser, setGithubUser] = useState(
     () => data.profile.connectedGithubRepositories[0]?.fullName.split('/')[0] ?? '',
@@ -332,10 +335,8 @@ export function ProfilePage() {
     try {
       const result = await api.githubRepositories(githubUser.trim())
       setRepositories(result.data)
-      setSelectedRepos(result.data
-        .filter((repo) => !repo.fork && !connectedRepositoryNames.has(repo.fullName.toLowerCase()))
-        .slice(0, 4)
-        .map((repo) => repo.fullName))
+      setSelectedRepos([])
+      setSuccess(`${result.data.length} public repositories loaded. None were selected automatically.`)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Could not load GitHub projects.')
     } finally {
@@ -429,6 +430,34 @@ export function ProfilePage() {
       : current)
   }
 
+  const exportMemory = () => {
+    const blob = new Blob([JSON.stringify({
+      format: 'rarebuilders-builder-memory',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      profile: data.profile,
+    }, null, 2)], { type: 'application/json' })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `rarebuilders-memory-${new Date().toISOString().slice(0, 10)}.json`
+    link.click()
+    URL.revokeObjectURL(link.href)
+    setSuccess('Builder memory exported. Keep the JSON private.')
+  }
+
+  const importMemoryFile = async (file: File | null) => {
+    if (!file) return
+    try {
+      const parsed = JSON.parse(await file.text()) as { profile?: unknown }
+      const profile = builderProfileSchema.parse(parsed.profile)
+      updateProfile(profile)
+      setSuccess('Builder memory imported and validated.')
+      setError('')
+    } catch {
+      setError('That file is not a valid RareBuilders memory export.')
+    }
+  }
+
   if (!data.profile.onboardingComplete || editing) {
     return (
       <div className="page narrow-page">
@@ -455,8 +484,30 @@ export function ProfilePage() {
         eyebrow="Builder memory"
         title={`What RareBuilders knows about ${data.profile.name}.`}
         description="Recommendations improve when the system can see reusable products, audiences, skills and unfinished ideas—not just selected interests."
-        actions={<button className="button secondary" onClick={() => setEditing(true)}>Edit six decisions</button>}
+        actions={(
+          <>
+            <button className="button secondary" onClick={() => setEditing(true)}>Edit six decisions</button>
+            <button className="button secondary" onClick={() => setEditingMemory((value) => !value)}>Edit full memory</button>
+            <button className="button secondary" onClick={exportMemory}>Export</button>
+            <label className="button secondary file-button">
+              Import
+              <input type="file" accept=".json,application/json" onChange={(event) => void importMemoryFile(event.target.files?.[0] ?? null)} />
+            </label>
+          </>
+        )}
       />
+
+      {editingMemory ? (
+        <BuilderMemoryEditor
+          profile={data.profile}
+          onClose={() => setEditingMemory(false)}
+          onSave={(profile) => {
+            updateProfile(profile)
+            setEditingMemory(false)
+            setSuccess('Builder memory saved.')
+          }}
+        />
+      ) : null}
 
       <section className="profile-overview">
         <div>
@@ -813,15 +864,27 @@ export function ProfilePage() {
               <small>{data.profile.careerProfile.experiences.length} experience records · editable via CV review</small>
             </section>
           ) : null}
-          {Object.keys(data.profile.learnedDomainWeights).length ? (
+          {data.feedback.length ? (
             <section className="learned-signals">
-              <span>Learned from decisions</span>
+              <span>Learned from feedback</span>
               {Object.entries(data.profile.learnedDomainWeights)
                 .sort(([, left], [, right]) => right - left)
                 .map(([domain, weight]) => (
                   <div key={domain}><strong>{domain}</strong><em>{weight > 0 ? `+${weight}` : weight}</em></div>
                 ))}
-              <button onClick={resetLearning}>Clear feedback history &amp; learning</button>
+              {Object.entries(data.profile.learnedConstraintWeights)
+                .sort(([, left], [, right]) => right - left)
+                .map(([constraint, weight]) => (
+                  <div key={`constraint-${constraint}`}>
+                    <strong>{constraint} constraint</strong><em>+{weight} risk</em>
+                  </div>
+                ))}
+              <button onClick={() => {
+                if (window.confirm('Clear all feedback history and learned preferences? This cannot be undone.')) {
+                  resetLearning()
+                  setSuccess('Feedback history and learned preferences cleared.')
+                }
+              }}>Clear feedback history &amp; learning</button>
             </section>
           ) : null}
           {data.profile.projects.map((project) => (

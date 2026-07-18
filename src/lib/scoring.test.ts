@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import type { BuilderProfile, FeedbackEvent, Opportunity } from '../../shared/domain'
 import { demoOpportunities, demoProfile } from '../data/fixtures'
 import {
-  applyFeedbackLearning,
   buildRadar,
   evaluateOpportunity,
   learnedDomainWeightsFromFeedback,
@@ -63,24 +62,30 @@ describe('opportunity scoring', () => {
     expect(radar.some((item) => item.bucketMatch === 'closest')).toBe(true)
   })
 
-  it('removes rejected opportunities and learns bounded domain preferences', () => {
+  it('removes passed opportunities and learns bounded domain preferences separately', () => {
     const target = demoOpportunities[0]
-    const rejection: FeedbackEvent = {
+    const decision: FeedbackEvent = {
       id: 'feedback-1',
       opportunityId: target.id,
-      action: 'rejected',
+      kind: 'decision',
+      action: 'passed',
+      reasonCode: 'time',
       domains: target.domains,
       createdAt: '2026-07-17T12:00:00.000Z',
     }
-
-    const radar = buildRadar(demoProfile, demoOpportunities, [rejection])
-    const learned = Array.from({ length: 8 }).reduce<BuilderProfile>(
-      (profile) => applyFeedbackLearning(profile, rejection),
-      demoProfile,
-    )
+    const preferences = Array.from({ length: 8 }, (_, index): FeedbackEvent => ({
+      id: `preference-${index}`,
+      opportunityId: `opportunity-${index}`,
+      kind: 'preference',
+      action: 'less-like',
+      domains: ['AI'],
+      createdAt: `2026-07-17T12:0${index}:00.000Z`,
+    }))
+    const radar = buildRadar(demoProfile, demoOpportunities, [decision])
+    const learned = learnedDomainWeightsFromFeedback(preferences)
 
     expect(radar.some((item) => item.opportunity.id === target.id)).toBe(false)
-    expect(learned.learnedDomainWeights.ai).toBe(-20)
+    expect(learned.ai).toBe(-20)
   })
 
   it('respects explicit no-go domains and declared constraints', () => {
@@ -100,6 +105,7 @@ describe('opportunity scoring', () => {
   it('uses reviewed CV evidence and penalizes unavailable participation paths', () => {
     const opportunity: Opportunity = {
       ...demoOpportunities[0],
+      domains: ['unfamiliar-domain'],
       requiredSkills: ['Rust'],
       participationModes: ['company'],
       applicationBurden: 'high',
@@ -130,34 +136,37 @@ describe('opportunity scoring', () => {
       {
         id: 'one',
         opportunityId: 'one',
-        action: 'more-like-this',
+        kind: 'preference',
+        action: 'more-like',
         domains: ['AI Agents'],
         createdAt: '2026-07-18T10:00:00Z',
       },
       {
         id: 'two',
         opportunityId: 'two',
+        kind: 'decision',
         action: 'saved',
         domains: ['ai-agents'],
         createdAt: '2026-07-18T10:01:00Z',
       },
     ]
 
-    expect(learnedDomainWeightsFromFeedback(feedback)).toEqual({ 'ai-agents': 7 })
+    expect(learnedDomainWeightsFromFeedback(feedback)).toEqual({ 'ai-agents': 5 })
   })
 
   it('uses only the latest decision per opportunity', () => {
     const initial: FeedbackEvent = {
       id: 'initial',
       opportunityId: 'same-opportunity',
-      action: 'more-like-this',
+      kind: 'preference',
+      action: 'more-like',
       domains: ['AI Agents'],
       createdAt: '2026-07-18T10:00:00Z',
     }
     const replacement: FeedbackEvent = {
       ...initial,
       id: 'replacement',
-      action: 'rejected',
+      action: 'less-like',
       domains: ['ai-agents'],
       createdAt: '2026-07-18T10:01:00Z',
     }

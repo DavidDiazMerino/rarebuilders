@@ -1,16 +1,15 @@
 import { Archive, Bookmark, CheckCircle2, ExternalLink, FileSearch, XCircle } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import type { FeedbackAction } from '../../shared/domain'
 import { PageHeader } from '../components/PageHeader'
 import { useAppState } from '../state/AppState'
 
-type Tab = 'saved' | 'entered' | 'rejected' | 'sources'
+type Tab = 'saved' | 'entered' | 'passed' | 'sources'
 
 const decisionTabs: Array<{ id: Tab; label: string }> = [
   { id: 'saved', label: 'Saved' },
   { id: 'entered', label: 'Entered' },
-  { id: 'rejected', label: 'Rejected' },
+  { id: 'passed', label: 'Passed' },
   { id: 'sources', label: 'Sources' },
 ]
 
@@ -19,19 +18,16 @@ export function LibraryPage() {
   const [tab, setTab] = useState<Tab>('saved')
   const latestFeedback = useMemo(() => {
     const latest = new Map<string, (typeof data.feedback)[number]>()
-    for (const event of data.feedback) latest.set(event.opportunityId, event)
+    for (const event of data.feedback) {
+      if (event.kind === 'decision') latest.set(event.opportunityId, event)
+    }
     return latest
   }, [data.feedback])
-  const acceptedActions: Record<Exclude<Tab, 'sources'>, FeedbackAction[]> = {
-    saved: ['saved', 'more-like-this'],
-    entered: ['entered'],
-    rejected: ['rejected', 'ignored'],
-  }
   const opportunities = tab === 'sources'
     ? []
     : data.opportunities.filter((opportunity) => {
         const action = latestFeedback.get(opportunity.id)?.action
-        return action ? acceptedActions[tab].includes(action) : false
+        return action === tab
       })
 
   return (
@@ -79,14 +75,14 @@ export function LibraryPage() {
                 <span className={`library-decision ${event?.action}`}>
                   {event?.action === 'entered'
                     ? <CheckCircle2 size={16} />
-                    : event?.action === 'rejected' || event?.action === 'ignored'
+                    : event?.action === 'passed'
                       ? <XCircle size={16} />
                       : <Bookmark size={16} />}
                 </span>
                 <div>
                   <small>{opportunity.organizer} · {event?.action}</small>
                   <h2><Link to={`/opportunities/${opportunity.id}`}>{opportunity.title}</Link></h2>
-                  <p>{event?.reason || opportunity.summary}</p>
+                  <p>{event?.note || (event?.reasonCode ? `Reason: ${event.reasonCode}` : opportunity.summary)}</p>
                 </div>
               </article>
             )

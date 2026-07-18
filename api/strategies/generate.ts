@@ -28,7 +28,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       owner: isOwnerRequest(req),
       create: () => generateOpportunityStrategy(body),
     })
-    sendData(res, result.data, { cached: result.cached, requestId: id, model: MODEL })
+    sendData(res, result.data, {
+      cached: result.cached,
+      requestId: id,
+      model: MODEL,
+      quota: result.quota,
+    })
   } catch (error) {
     const message = publicMessage(error)
     const status = error instanceof z.ZodError ? 400 : message.includes('limit') || message.includes('budget') ? 429 : 503

@@ -112,8 +112,8 @@ For the OpenAI Build Week demo, a user must be able to:
 6. Open an opportunity dossier with reasons for and against entering.
 7. See the opportunity matched against existing projects and assets.
 8. Generate a concrete strategy and build angle.
-9. Reject, save, or request more opportunities of a type and see the radar
-   change.
+9. Save, enter or pass independently from asking for more or fewer
+   opportunities of a type, and see the radar change.
 10. Compare a crowded strategic opportunity with a hidden high-edge one.
 
 Anything that does not strengthen this journey is secondary.
@@ -137,8 +137,9 @@ The shortest credible story is:
    David's existing projects or assets and explains the leverage.
 6. **The decision.** The dossier shows why to enter, why not to, expected cost,
    uncertainties, and a proposed build.
-7. **The learning loop.** Reject a category or select "More like this"; the
-   visible recommendations and explanation change.
+7. **The learning loop.** Pass with a structured reason or select “More like
+   this”; the visible recommendations and explanation change without sending a
+   private note to the model.
 
 The demo should prove a decision became easier. It should not be a tour of
 cards and labels.
@@ -157,7 +158,7 @@ It contains:
 - five recommendation cards with an explicit verdict;
 - provenance, freshness, deadline, and confidence;
 - the reason this recommendation exists;
-- fast actions: Save, Not for me, More like this, Open dossier.
+- fast actions: Save, Pass, More like this, Open dossier.
 
 ### 2. Opportunity dossier
 
@@ -210,15 +211,15 @@ The MVP needs a credible real input path:
 
 ### 5. Saved and decisions
 
-At minimum, persist:
+Persist two independent state families:
 
-- Saved;
-- Not for me, with optional reason;
-- More like this;
-- Entered;
-- Ignored.
+- decision: Saved, Entered or Passed;
+- preference: More like this or Less like this;
+- structured pass reason: time, reward, eligibility, team, deadline,
+  source trust, domain fit or other;
+- optional private note, retained locally and never sent to GPT.
 
-These states must visibly influence later recommendations.
+The latest event per opportunity and state family owns its learning effect.
 
 ## The scorecard
 

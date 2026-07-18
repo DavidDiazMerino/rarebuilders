@@ -31,6 +31,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [location.pathname])
 
   const handleReset = () => {
+    if (!window.confirm('Reset this browser to the welcome screen and clear local RareBuilders data?')) return
     reset()
     navigate('/')
   }

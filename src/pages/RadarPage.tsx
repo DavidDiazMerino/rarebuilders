@@ -1,18 +1,26 @@
 import { FilePlus2, SlidersHorizontal } from 'lucide-react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
+import type { FeedbackAction, FeedbackKind } from '../../shared/domain'
 import { OpportunityCard } from '../components/OpportunityCard'
 import { PageHeader } from '../components/PageHeader'
 import { buildRadar } from '../lib/scoring'
 import { useAppState } from '../state/AppState'
 
 export function RadarPage() {
-  const { data, recordFeedback } = useAppState()
+  const { data, recordFeedback, undoFeedback } = useAppState()
+  const [feedbackNotice, setFeedbackNotice] = useState<{
+    opportunityId: string
+    kind: FeedbackKind
+    action: FeedbackAction
+  } | null>(null)
   const radar = useMemo(
     () => buildRadar(data.profile, data.opportunities, data.feedback),
     [data.profile, data.opportunities, data.feedback],
   )
-  const feedbackByOpportunity = new Map(data.feedback.map((event) => [event.opportunityId, event.action]))
+  const feedbackByOpportunity = new Map(
+    data.feedback.map((event) => [`${event.opportunityId}:${event.kind}`, event.action]),
+  )
   const bucketSummary = (bucket: 'practical' | 'rare' | 'wildcard') => {
     const items = radar.filter((item) => item.bucket === bucket)
     return {
@@ -46,6 +54,18 @@ export function RadarPage() {
           </>
         )}
       />
+      {feedbackNotice ? (
+        <div className="pool-confirmation" role="status">
+          <span>
+            Feedback saved: <strong>{feedbackNotice.action.replace('-', ' ')}</strong>.
+            Your private note and preferences are never sent to GPT.
+          </span>
+          <button onClick={() => {
+            undoFeedback(feedbackNotice.opportunityId, feedbackNotice.kind)
+            setFeedbackNotice(null)
+          }}>Undo</button>
+        </div>
+      ) : null}
 
       <section className="radar-summary" aria-label="Radar distribution">
         <div>
@@ -71,13 +91,22 @@ export function RadarPage() {
           <OpportunityCard
             key={item.opportunity.id}
             item={item}
-            currentFeedback={feedbackByOpportunity.get(item.opportunity.id)}
-            onFeedback={(action) => recordFeedback(item.opportunity, action)}
+            currentDecision={feedbackByOpportunity.get(`${item.opportunity.id}:decision`)}
+            currentPreference={feedbackByOpportunity.get(`${item.opportunity.id}:preference`)}
+            onFeedback={(kind, action) => {
+              recordFeedback(
+                item.opportunity,
+                kind,
+                action,
+                kind === 'decision' && action === 'passed' ? 'other' : undefined,
+              )
+              setFeedbackNotice({ opportunityId: item.opportunity.id, kind, action })
+            }}
           />
         )) : (
           <section className="empty-state">
             <h2>Your radar is quiet.</h2>
-            <p>You rejected every current candidate. Add a source or reset your preferences to keep exploring.</p>
+            <p>You passed every current candidate. Add a source or reset your preferences to keep exploring.</p>
             <Link className="button primary" to="/discover">Discover on GitHub</Link>
           </section>
         )}

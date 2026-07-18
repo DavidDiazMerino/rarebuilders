@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { builderProfileSchema } from '../../shared/domain.js'
 import { runAiOperation } from '../_lib/ai-operation.js'
 import { clientIp, publicMessage, requestId, requireMethod, sendData, sendError } from '../_lib/http.js'
 import { isOwnerRequest } from '../_lib/owner-access.js'
@@ -13,7 +12,6 @@ import type { VercelRequest, VercelResponse } from '../_lib/vercel-types.js'
 const requestSchema = z.object({
   sourceUrl: z.string().max(2_000),
   sourceText: z.string().min(80).max(30_000),
-  profile: builderProfileSchema,
 })
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -33,6 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       cached: result.cached,
       requestId: id,
       model: MODEL,
+      quota: result.quota,
     })
   } catch (error) {
     const message = publicMessage(error)

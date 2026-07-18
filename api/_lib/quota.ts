@@ -37,24 +37,50 @@ export async function reserveAiOperation(ip: string, operation: AiOperation, own
   const day = new Date().toISOString().slice(0, 10)
   const ipHash = createHash('sha256').update(ip).digest('hex').slice(0, 20)
   const ipKey = `rarebuilders:ai:ip:v2:${owner ? 'owner' : 'public'}:${day}:${operation}:${ipHash}`
+  const operationLimit = (owner ? ownerDailyLimit : perIpLimit)[operation]
 
   try {
-    const globalCount = await redis.incr(globalKey)
-    if (globalCount === 1) await redis.expire(globalKey, 60 * 60 * 24 * 35)
-    if (globalCount > globalLimit) {
-      await redis.decr(globalKey)
+    const result = await redis.eval(`
+      local globalCount = tonumber(redis.call('GET', KEYS[1]) or '0')
+      local clientCount = tonumber(redis.call('GET', KEYS[2]) or '0')
+      local globalLimit = tonumber(ARGV[1])
+      local clientLimit = tonumber(ARGV[2])
+      if globalCount >= globalLimit then
+        return {0, globalCount, clientCount, 1}
+      end
+      if clientCount >= clientLimit then
+        return {0, globalCount, clientCount, 2}
+      end
+      globalCount = redis.call('INCR', KEYS[1])
+      if globalCount == 1 then redis.call('EXPIRE', KEYS[1], tonumber(ARGV[3])) end
+      clientCount = redis.call('INCR', KEYS[2])
+      if clientCount == 1 then redis.call('EXPIRE', KEYS[2], tonumber(ARGV[4])) end
+      return {1, globalCount, clientCount, 0}
+    `, [globalKey, ipKey], [globalLimit, operationLimit, 60 * 60 * 24 * 35, 60 * 60 * 26]) as Array<number | string>
+    const [allowed, globalCount, ipCount, reason] = result.map(Number)
+    if (!allowed && reason === 1) {
       return { ok: false as const, reason: 'The shared GPT-5.6 demo budget is exhausted. Cached results still work.' }
     }
-
-    const ipCount = await redis.incr(ipKey)
-    if (ipCount === 1) await redis.expire(ipKey, 60 * 60 * 26)
-    if (ipCount > (owner ? ownerDailyLimit : perIpLimit)[operation]) {
-      await Promise.all([redis.decr(ipKey), redis.decr(globalKey)])
+    if (!allowed) {
       return { ok: false as const, reason: `This browser has reached today’s ${operation} limit. Try a cached source.` }
     }
-
-    return { ok: true as const, globalCount, globalLimit, ipCount }
+    return { ok: true as const, globalCount, globalLimit, ipCount, operationLimit }
   } catch {
     return { ok: false as const, reason: 'AI safeguards are temporarily unavailable. Cached results still work.' }
+  }
+}
+
+export function aiQuotaMeta(
+  operation: AiOperation,
+  reservation: Awaited<ReturnType<typeof reserveAiOperation>>,
+) {
+  if (!reservation.ok) return undefined
+  const reset = new Date()
+  reset.setUTCHours(24, 0, 0, 0)
+  return {
+    operation,
+    remaining: Math.max(0, reservation.operationLimit - reservation.ipCount),
+    limit: reservation.operationLimit,
+    resetAt: reset.toISOString(),
   }
 }

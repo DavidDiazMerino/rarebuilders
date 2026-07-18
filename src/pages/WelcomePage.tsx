@@ -42,7 +42,7 @@ export function WelcomePage() {
             <span className="entry-icon"><Radar size={22} /></span>
             <span>
               <strong>Explore David’s radar</strong>
-              <small>Start with a populated profile, real product context and five ranked opportunities.</small>
+              <small>Start with a populated profile, real product context and five illustrative opportunity patterns.</small>
             </span>
             <ArrowRight size={20} />
           </button>
