@@ -163,8 +163,18 @@ describe('opportunity scoring', () => {
     }
 
     expect(learnedDomainWeightsFromFeedback([initial, replacement])).toEqual({ 'ai-agents': -5 })
+    const learnedWithHistory = learnedDomainWeightsFromFeedback([initial, replacement])
+    const learnedWithReplacement = learnedDomainWeightsFromFeedback([replacement])
+
+    expect(learnedWithHistory).toEqual(learnedWithReplacement)
     expect(
-      evaluateOpportunity(demoProfile, demoOpportunities[1], [initial, replacement]).overall,
-    ).toBe(evaluateOpportunity(demoProfile, demoOpportunities[1], [replacement]).overall)
+      evaluateOpportunity(
+        { ...demoProfile, learnedDomainWeights: learnedWithHistory },
+        demoOpportunities[1],
+      ).overall,
+    ).toBe(evaluateOpportunity(
+      { ...demoProfile, learnedDomainWeights: learnedWithReplacement },
+      demoOpportunities[1],
+    ).overall)
   })
 })

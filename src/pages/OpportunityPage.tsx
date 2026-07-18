@@ -30,8 +30,8 @@ export function OpportunityPage() {
   const [decisionReason, setDecisionReason] = useState('')
 
   const evaluation = useMemo(
-    () => opportunity ? evaluateOpportunity(data.profile, opportunity, data.feedback) : null,
-    [data.profile, data.feedback, opportunity],
+    () => opportunity ? evaluateOpportunity(data.profile, opportunity) : null,
+    [data.profile, opportunity],
   )
 
   if (!opportunity || !evaluation) {

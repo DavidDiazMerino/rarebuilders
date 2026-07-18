@@ -65,18 +65,6 @@ function matchedProjects(profile: BuilderProfile, opportunity: Opportunity) {
     .map(({ project }) => project)
 }
 
-function feedbackModifier(opportunity: Opportunity, feedback: FeedbackEvent[]) {
-  return latestFeedbackEvents(feedback).reduce((modifier, event) => {
-    if (!intersect(event.domains, opportunity.domains).length) return modifier
-    if (event.action === 'more-like-this') return modifier + 7
-    if (event.action === 'saved') return modifier + 3
-    if (event.action === 'entered') return modifier + 8
-    if (event.action === 'rejected') return modifier - 10
-    if (event.action === 'ignored') return modifier - 3
-    return modifier
-  }, 0)
-}
-
 function latestFeedbackEvents(feedback: FeedbackEvent[]) {
   const latest = new Map<string, FeedbackEvent>()
   for (const event of feedback) latest.set(event.opportunityId, event)
@@ -127,7 +115,6 @@ function getVerdict(overall: number, risk: number, effortFit: number): Verdict {
 export function evaluateOpportunity(
   profile: BuilderProfile,
   opportunity: Opportunity,
-  feedback: FeedbackEvent[] = [],
 ): OpportunityEvaluation {
   const { direct, wildcard, blocked, learned } = domainAffinity(profile, opportunity)
   const hiddenness = estimateHiddenness(opportunity)
@@ -195,7 +182,6 @@ export function evaluateOpportunity(
       + (participationMismatch ? 18 : 0)
       + (opportunity.deadline ? 0 : 12),
   )
-  const modifier = feedbackModifier(opportunity, feedback)
   const overall = clamp(
     fit * 0.3
       + winSignal * 0.23
@@ -203,7 +189,6 @@ export function evaluateOpportunity(
       + effortFit * 0.17
       + opportunity.confidence * 0.08
       - risk * 0.08
-      + modifier,
   )
 
   const reasonsFor = [
@@ -275,7 +260,7 @@ export function buildRadar(
     .filter((opportunity) => intersect(profile.noGoDomains, opportunity.domains).length === 0)
     .map((opportunity) => ({
       opportunity,
-      evaluation: evaluateOpportunity(profile, opportunity, feedback),
+      evaluation: evaluateOpportunity(profile, opportunity),
     }))
     .sort((a, b) => b.evaluation.overall - a.evaluation.overall)
 
