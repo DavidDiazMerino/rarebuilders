@@ -600,6 +600,23 @@ export function ProfilePage() {
                 />
               </label>
             </div>
+            {data.profile.careerProfile.headline
+              || data.profile.careerProfile.skills.length
+              || data.profile.careerProfile.experiences.length ? (
+                <div className="imported-context-status">
+                  <Check size={15} />
+                  <span>
+                    <strong>Professional profile is in Builder Memory</strong>
+                    <small>
+                      {data.profile.careerProfile.skills.length} skills · {data.profile.careerProfile.experiences.length} experience records.
+                      The original CV is not stored.
+                    </small>
+                  </span>
+                  <button onClick={() => setEditingMemory(true)}>Review stored profile</button>
+                </div>
+              ) : (
+                <p className="import-empty-status">No CV-derived professional profile is stored yet.</p>
+              )}
             {cvFile ? (
               <div className="cv-file-ready">
                 <span><FileText size={16} /><strong>{cvFile.name}</strong><small>{Math.ceil(cvFile.size / 1024)} KB</small></span>
@@ -851,8 +868,16 @@ export function ProfilePage() {
 
         <aside className="project-inventory">
           <div className="section-heading">
-            <div><p className="section-kicker">Project inventory</p><h2>{data.profile.projects.length} reusable assets</h2></div>
+            <div>
+              <p className="section-kicker">{data.mode === 'demo' ? 'David’s demo inventory' : 'Your project inventory'}</p>
+              <h2>{data.profile.projects.length} reusable assets</h2>
+            </div>
           </div>
+          {data.mode === 'demo' ? (
+            <div className="demo-inventory-note">
+              These are David’s example projects. They remain while you are in demo mode, even if you add a live opportunity source.
+            </div>
+          ) : null}
           {data.profile.careerProfile.headline || data.profile.careerProfile.skills.length ? (
             <section className="career-summary-card">
               <span>Professional evidence</span>

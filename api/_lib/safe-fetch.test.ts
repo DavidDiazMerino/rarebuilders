@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   extractHtmlSource,
+  enrichDevpostSource,
   fetchPublicSource,
   matchDevpostChallenge,
   matchKaggleCompetition,
@@ -81,6 +82,47 @@ describe('safe source fetching', () => {
     expect(result.text).toContain('## Main source content')
   })
 
+  it('renders HTML-encoded JSON-LD descriptions as readable text', () => {
+    const result = extractHtmlSource(`
+      <html>
+        <head>
+          <script type="application/ld+json">
+            {
+              "@type": "Event",
+              "name": "Encoded challenge",
+              "description": "&lt;h2&gt;How to enter&lt;/h2&gt;&lt;p&gt;Build a working prototype.&lt;/p&gt;"
+            }
+          </script>
+        </head>
+        <body><main><p>Submit a repository and demo before the deadline.</p></main></body>
+      </html>
+    `, 'https://example.com/encoded')
+
+    expect(result.text).toContain('## How to enter')
+    expect(result.text).toContain('Build a working prototype.')
+    expect(result.text).not.toContain('&lt;h2')
+  })
+
+  it('preserves Devpost eligibility, supported countries and participant count', () => {
+    const result = extractHtmlSource(`
+      <html><head><title>Builder challenge</title></head><body>
+        <ul id="eligibility-list">
+          <li>Above legal age of majority</li>
+          <li>Only specific countries included</li>
+        </ul>
+        <ul id="eligibility-countries-modal-list">
+          <li>Spain</li><li>Portugal</li>
+        </ul>
+        <a href="/participants">Participants (42831)</a>
+        <main><h1>Builder challenge</h1><p>Build and submit a working tool before the deadline.</p></main>
+      </body></html>
+    `, 'https://builder-challenge.devpost.com/')
+
+    expect(result.text).toContain('Eligibility: Above legal age of majority · Only specific countries included')
+    expect(result.text).toContain('Eligible countries and territories (2): Spain, Portugal')
+    expect(result.text).toContain('Visible participants: (42831)')
+  })
+
   it('does not substitute a different Devpost challenge when the requested host is absent', () => {
     const candidates = [{
       id: 1,
@@ -92,6 +134,41 @@ describe('safe source fetching', () => {
       new URL('https://requested-challenge.devpost.com/'),
       candidates,
     )).toBeUndefined()
+  })
+
+  it('enriches sparse Devpost metadata with the full public challenge page', () => {
+    const metadata = {
+      url: 'https://openai.devpost.com/',
+      title: 'OpenAI Build Week',
+      text: 'Title: OpenAI Build Week\nDeadline: July 21\nPrize: $100,000',
+      method: 'devpost-api' as const,
+      contentType: 'application/json',
+      wordCount: 9,
+      warnings: ['Verify the rules.'],
+    }
+    const publicPage = extractHtmlSource(`
+      <html><head><title>OpenAI Build Week</title></head><body>
+        <main>
+          <h1>OpenAI Build Week</h1>
+          <h2>Requirements</h2>
+          <p>Create a working project using Codex with GPT-5.6.</p>
+          <ul>
+            <li>Upload a public demo video under three minutes.</li>
+            <li>Provide a repository and a Codex Session ID.</li>
+          </ul>
+          <h2>Who can participate</h2>
+          <p>Adults in supported countries may participate online.</p>
+        </main>
+      </body></html>
+    `, metadata.url)
+
+    const result = enrichDevpostSource(metadata, publicPage)
+
+    expect(result.method).toBe('devpost-api')
+    expect(result.text).toContain('$100,000')
+    expect(result.text).toContain('Codex Session ID')
+    expect(result.text).toContain('## Requirements')
+    expect(result.wordCount).toBeGreaterThan(metadata.wordCount)
   })
 
   it('does not substitute a different Kaggle competition when the requested ref is absent', () => {

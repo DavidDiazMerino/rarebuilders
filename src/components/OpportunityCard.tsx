@@ -2,7 +2,9 @@ import { ArrowUpRight, Bookmark, Check, EyeOff, Sparkles } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import type { FeedbackAction, RadarItem } from '../../shared/domain'
 import { deadlineDistance, formatDeadline, sourceKindLabel } from '../lib/format'
+import { scoreDescriptions } from '../lib/score-descriptions'
 import { verdictLabel } from '../lib/scoring'
+import { ScoreHint } from './ScoreHint'
 
 export function OpportunityCard({
   item,
@@ -31,9 +33,9 @@ export function OpportunityCard({
           <p className="card-source">{opportunity.organizer} · {sourceKindLabel(opportunity.sourceKind)}</p>
           <h2><Link to={`/opportunities/${opportunity.id}`}>{opportunity.title}</Link></h2>
         </div>
-        <div className="overall-score" aria-label={`Overall score ${evaluation.overall}`}>
+        <div className="overall-score" aria-label={`Personal edge ${evaluation.overall} out of 100`}>
           <strong>{evaluation.overall}</strong>
-          <span>edge</span>
+          <ScoreHint label="edge" description={scoreDescriptions.edge} />
         </div>
       </div>
       <p className="card-summary">{opportunity.summary}</p>
@@ -42,11 +44,12 @@ export function OpportunityCard({
         <strong>{deadlineDistance(opportunity.deadline)}</strong>
         <span>{opportunity.effortHours > 0 ? `${opportunity.effortHours}h estimated` : 'Effort unknown'}</span>
       </div>
+      <p className="card-reward"><span>Reward</span>{opportunity.reward || 'Not confirmed'}</p>
       <div className="mini-scores">
-        <span>Fit <strong>{evaluation.fit}</strong></span>
-        <span>Win signal <strong>{evaluation.winSignal}</strong></span>
-        <span>Hiddenness <strong>{evaluation.hiddenness}</strong></span>
-        <span>Confidence <strong>{evaluation.confidence}</strong></span>
+        <span><ScoreHint label="Fit" description={scoreDescriptions.fit} /> <strong>{evaluation.fit}</strong></span>
+        <span><ScoreHint label="Win signal" description={scoreDescriptions.winSignal} /> <strong>{evaluation.winSignal}</strong></span>
+        <span><ScoreHint label="Hiddenness" description={scoreDescriptions.hiddenness} /> <strong>{evaluation.hiddenness}</strong></span>
+        <span><ScoreHint label="Confidence" description={scoreDescriptions.confidence} /> <strong>{evaluation.confidence}</strong></span>
       </div>
       <div className="recommendation-line">
         <span className={`verdict ${evaluation.verdict}`}>{verdictLabel[evaluation.verdict]}</span>

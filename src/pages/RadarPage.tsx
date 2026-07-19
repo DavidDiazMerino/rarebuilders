@@ -1,5 +1,5 @@
-import { FilePlus2, SlidersHorizontal } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { CheckCircle2, EyeOff, FilePlus2, SlidersHorizontal, Sparkles } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { FeedbackAction, FeedbackKind } from '../../shared/domain'
 import { OpportunityCard } from '../components/OpportunityCard'
@@ -11,9 +11,15 @@ export function RadarPage() {
   const { data, recordFeedback, undoFeedback } = useAppState()
   const [feedbackNotice, setFeedbackNotice] = useState<{
     opportunityId: string
+    opportunityTitle: string
     kind: FeedbackKind
     action: FeedbackAction
   } | null>(null)
+  const [showDemoGuide, setShowDemoGuide] = useState(false)
+  useEffect(() => {
+    if (data.mode !== 'demo' || window.sessionStorage.getItem('rarebuilders:demo-guide-seen')) return
+    setShowDemoGuide(true)
+  }, [data.mode])
   const radar = useMemo(
     () => buildRadar(data.profile, data.opportunities, data.feedback),
     [data.profile, data.opportunities, data.feedback],
@@ -34,6 +40,8 @@ export function RadarPage() {
   const liveCount = data.opportunities.filter((opportunity) => opportunity.provenance.mode === 'live').length
   const illustrativeCount = data.opportunities.length - liveCount
   const usingLiveOnly = liveCount > 0 && illustrativeCount > 0
+  const passedOpportunities = data.opportunities.filter((opportunity) =>
+    feedbackByOpportunity.get(`${opportunity.id}:decision`) === 'passed')
   const date = new Intl.DateTimeFormat('en', {
     weekday: 'long',
     month: 'long',
@@ -57,6 +65,23 @@ export function RadarPage() {
           </>
         )}
       />
+      {showDemoGuide ? (
+        <section className="demo-guide" aria-label="Demo walkthrough">
+          <div>
+            <span>Quick demo · 60 seconds</span>
+            <h2>This is David’s populated example, so you can test the product before creating a profile.</h2>
+          </div>
+          <ol>
+            <li><strong>Open a dossier</strong><span>See why one opportunity fits this builder.</span></li>
+            <li><strong>Teach the radar</strong><span>Try More like this or Pass and watch the feedback state.</span></li>
+            <li><strong>Add a real source</strong><span>Live evidence replaces illustrative opportunity cards.</span></li>
+          </ol>
+          <button onClick={() => {
+            window.sessionStorage.setItem('rarebuilders:demo-guide-seen', '1')
+            setShowDemoGuide(false)
+          }}><CheckCircle2 size={15} /> Got it, explore</button>
+        </section>
+      ) : null}
       {usingLiveOnly ? (
         <div className="pool-confirmation live-pool-notice" role="status">
           <span>
@@ -68,15 +93,19 @@ export function RadarPage() {
         </div>
       ) : null}
       {feedbackNotice ? (
-        <div className="pool-confirmation" role="status">
+        <div className={`pool-confirmation feedback-confirmation ${feedbackNotice.action}`} role="status">
+          {feedbackNotice.kind === 'preference' ? <Sparkles size={16} /> : <EyeOff size={16} />}
           <span>
-            Feedback saved: <strong>{feedbackNotice.action.replace('-', ' ')}</strong>.
-            Your private note and preferences are never sent to GPT.
+            <strong>{feedbackNotice.action === 'passed' ? 'Hidden from today’s radar.' : 'Preference learned.'}</strong>
+            {feedbackNotice.action === 'passed'
+              ? ` “${feedbackNotice.opportunityTitle}” is kept below and in Library in case this was accidental.`
+              : ` Domains from “${feedbackNotice.opportunityTitle}” will receive more weight in this browser’s future rankings.`}
           </span>
           <button onClick={() => {
             undoFeedback(feedbackNotice.opportunityId, feedbackNotice.kind)
             setFeedbackNotice(null)
           }}>Undo</button>
+          {feedbackNotice.kind === 'preference' ? <Link to="/profile">See learned signals</Link> : null}
         </div>
       ) : null}
 
@@ -113,7 +142,12 @@ export function RadarPage() {
                 action,
                 kind === 'decision' && action === 'passed' ? 'other' : undefined,
               )
-              setFeedbackNotice({ opportunityId: item.opportunity.id, kind, action })
+              setFeedbackNotice({
+                opportunityId: item.opportunity.id,
+                opportunityTitle: item.opportunity.title,
+                kind,
+                action,
+              })
             }}
           />
         )) : (
@@ -124,6 +158,24 @@ export function RadarPage() {
           </section>
         )}
       </div>
+      {passedOpportunities.length ? (
+        <section className="passed-tray" aria-label="Passed opportunities">
+          <div>
+            <EyeOff size={16} />
+            <span><strong>{passedOpportunities.length} passed</strong>Hidden from the active radar, retained for recovery.</span>
+            <Link to="/library">Review passed items</Link>
+          </div>
+          {passedOpportunities.slice(-3).map((opportunity) => (
+            <div key={opportunity.id}>
+              <span><strong>{opportunity.title}</strong>{opportunity.organizer}</span>
+              <button onClick={() => {
+                undoFeedback(opportunity.id, 'decision')
+                if (feedbackNotice?.opportunityId === opportunity.id) setFeedbackNotice(null)
+              }}>Undo pass</button>
+            </div>
+          ))}
+        </section>
+      ) : null}
     </div>
   )
 }

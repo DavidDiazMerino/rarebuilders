@@ -221,6 +221,15 @@ function textValue(value: unknown): string {
   return textValue(record.name ?? record.description ?? record.address ?? record.url)
 }
 
+function readableDescription(value: unknown) {
+  const raw = textValue(value)
+  if (!raw) return ''
+  const decoded = cheerio.load(`<div>${raw}</div>`)('div').text()
+  return /<\/?[a-z][\s\S]*>/i.test(decoded)
+    ? htmlToStructuredText(decoded)
+    : normalizeText(decoded)
+}
+
 function structuredMetadata($: cheerio.CheerioAPI) {
   const records = jsonLdObjects($)
     .filter((record) => record.name || record.headline || record.description || record.endDate || record.validThrough)
@@ -238,11 +247,29 @@ function structuredMetadata($: cheerio.CheerioAPI) {
       ['Offer or reward', record.offers],
     ]
     for (const [label, value] of fields) {
-      const text = textValue(value)
+      const text = label === 'Description' ? readableDescription(value) : textValue(value)
       if (text && !lines.includes(`${label}: ${text}`)) lines.push(`${label}: ${text}`)
     }
   }
   return normalizeText(lines.join('\n'))
+}
+
+function providerPageMetadata($: cheerio.CheerioAPI, url: URL) {
+  if (!url.hostname.toLowerCase().endsWith('.devpost.com')) return ''
+  const eligibility = $('#eligibility-list > li')
+    .map((_, element) => $(element).text().replace(/\s+/g, ' ').trim())
+    .get()
+    .filter(Boolean)
+  const countries = $('#eligibility-countries-modal-list > li')
+    .map((_, element) => $(element).text().replace(/\s+/g, ' ').trim())
+    .get()
+    .filter(Boolean)
+  const participants = $('a[href$="/participants"]').first().text().replace(/\s+/g, ' ').trim()
+  return normalizeText([
+    eligibility.length ? `Eligibility: ${eligibility.join(' · ')}` : '',
+    countries.length ? `Eligible countries and territories (${countries.length}): ${countries.join(', ')}` : '',
+    participants ? `Visible participants: ${participants.replace(/^Participants\s*/i, '')}` : '',
+  ].filter(Boolean).join('\n'))
 }
 
 export function extractHtmlSource(raw: string, sourceUrl: string): SourceExtraction {
@@ -255,6 +282,7 @@ export function extractHtmlSource(raw: string, sourceUrl: string): SourceExtract
     || titleFromUrl(url)
   ).replace(/\s+/g, ' ').trim().slice(0, 200)
   const metadata = structuredMetadata($)
+  const providerMetadata = providerPageMetadata($, url)
   const candidates: Array<{ method: 'semantic-html'; text: string }> = []
 
   const selectors = [
@@ -291,6 +319,8 @@ export function extractHtmlSource(raw: string, sourceUrl: string): SourceExtract
   const text = normalizeText([
     metadata ? '## Structured page metadata' : '',
     metadata,
+    providerMetadata ? '## Provider participation metadata' : '',
+    providerMetadata,
     metaDescription && !visibleText.includes(metaDescription) ? '## Page summary' : '',
     metaDescription && !visibleText.includes(metaDescription) ? metaDescription : '',
     visibleText ? '## Main source content' : '',
@@ -568,6 +598,27 @@ async function fetchDevpostChallenge(url: URL): Promise<SourceExtraction | null>
   }
 }
 
+export function enrichDevpostSource(
+  metadata: SourceExtraction,
+  publicPage: SourceExtraction,
+): SourceExtraction {
+  const text = normalizeText([
+    '## Devpost summary metadata',
+    metadata.text,
+    '',
+    publicPage.text,
+  ].join('\n'))
+  return {
+    ...publicPage,
+    url: metadata.url || publicPage.url,
+    title: metadata.title || publicPage.title,
+    text,
+    method: 'devpost-api',
+    wordCount: wordCount(text),
+    warnings: [...new Set([...metadata.warnings, ...publicPage.warnings])],
+  }
+}
+
 type KaggleSource = {
   ref?: string
   title?: string
@@ -633,6 +684,7 @@ async function fetchKaggleCompetition(url: URL): Promise<SourceExtraction | null
 
 export async function fetchPublicSource(input: string): Promise<SourceExtraction> {
   let target = await assertSafeUrl(input)
+  let devpostMetadata: SourceExtraction | null = null
   const adapters = [
     fetchGithubIssue,
     fetchEuFundingTopic,
@@ -642,7 +694,12 @@ export async function fetchPublicSource(input: string): Promise<SourceExtraction
   for (const adapter of adapters) {
     try {
       const adapted = await adapter(target.url)
-      if (adapted) return adapted
+      if (!adapted) continue
+      if (adapted.method === 'devpost-api' && adapted.wordCount < 120) {
+        devpostMetadata = adapted
+        continue
+      }
+      return adapted
     } catch {
       // A provider API is an optimization. The public page remains a valid fallback.
     }
@@ -671,7 +728,10 @@ export async function fetchPublicSource(input: string): Promise<SourceExtraction
       target = await assertSafeUrl(new URL(location, target.url).toString())
     }
 
-    if (!response?.ok) throw new PublicError(`The source returned ${response?.status ?? 'no response'}.`)
+    if (!response?.ok) {
+      if (devpostMetadata) return devpostMetadata
+      throw new PublicError(`The source returned ${response?.status ?? 'no response'}.`)
+    }
     const contentType = (response.headers.get('content-type') ?? '').toLowerCase()
     if (contentType && !ALLOWED_TYPES.some((allowed) => contentType.includes(allowed))) {
       throw new PublicError('Only HTML, text, Markdown and PDF sources can be imported.')
@@ -697,7 +757,13 @@ export async function fetchPublicSource(input: string): Promise<SourceExtraction
         warnings: text.length >= MAX_TEXT ? ['The extracted source was trimmed to 30,000 characters.'] : [],
       }
     }
-    return extractHtmlSource(raw, target.url.toString())
+    try {
+      const publicPage = extractHtmlSource(raw, target.url.toString())
+      return devpostMetadata ? enrichDevpostSource(devpostMetadata, publicPage) : publicPage
+    } catch (error) {
+      if (devpostMetadata) return devpostMetadata
+      throw error
+    }
   } finally {
     await dispatcher?.close().catch(() => undefined)
   }
