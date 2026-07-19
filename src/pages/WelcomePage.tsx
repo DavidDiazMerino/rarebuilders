@@ -26,8 +26,9 @@ export function WelcomePage() {
           <p className="section-kicker">Personal opportunity intelligence</p>
           <h1>Stop chasing the biggest opportunity. Find the one where you have an edge.</h1>
           <p className="welcome-lede">
-            RareBuilders finds overlooked challenges, grants and bounties, then combines the source evidence
-            with your projects, constraints and appetite for weirdness.
+            RareBuilders turns scattered challenges, grants and bounties into five decisions ranked for you.
+            Unlike a directory, it uses source evidence, your reusable work and your real constraints to explain
+            where you have an unusual advantage—and where you should pass.
           </p>
           <div className="thesis-list">
             <span><Radar size={19} /> Not another hackathon directory</span>
@@ -42,7 +43,7 @@ export function WelcomePage() {
             <span className="entry-icon"><Radar size={22} /></span>
             <span>
               <strong>Explore David’s radar</strong>
-              <small>Start with a populated profile, real product context and five illustrative opportunity patterns.</small>
+              <small>Instant product demo. Skip setup and explore a populated example profile with five clearly labelled illustrative patterns.</small>
             </span>
             <ArrowRight size={20} />
           </button>
@@ -50,7 +51,7 @@ export function WelcomePage() {
             <span className="entry-icon"><FileStack size={22} /></span>
             <span>
               <strong>Build my profile</strong>
-              <small>Answer six decisions, then optionally import Markdown notes and public GitHub projects.</small>
+              <small>Create your own private radar from six decisions, then optionally add a CV, Markdown notes and selected public GitHub projects.</small>
             </span>
             <ArrowRight size={20} />
           </button>

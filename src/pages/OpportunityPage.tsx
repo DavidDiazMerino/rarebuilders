@@ -10,6 +10,7 @@ import {
   Flag,
   MoreHorizontal,
   Sparkles,
+  Trophy,
 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
@@ -17,6 +18,7 @@ import type { FeedbackReason } from '../../shared/domain'
 import { ScoreBar } from '../components/ScoreBar'
 import { api } from '../lib/api'
 import { deadlineDistance, formatDeadline } from '../lib/format'
+import { scoreDescriptions } from '../lib/score-descriptions'
 import { evaluateOpportunity, verdictLabel } from '../lib/scoring'
 import { useAppState } from '../state/AppState'
 
@@ -30,6 +32,7 @@ export function OpportunityPage() {
   const [rejecting, setRejecting] = useState(false)
   const [passReason, setPassReason] = useState<FeedbackReason>('time')
   const [decisionNote, setDecisionNote] = useState('')
+  const [feedbackMessage, setFeedbackMessage] = useState('')
 
   const evaluation = useMemo(
     () => opportunity ? evaluateOpportunity(data.profile, opportunity) : null,
@@ -106,12 +109,13 @@ export function OpportunityPage() {
       <section className="facts-strip">
         <div><Clock3 size={17} /><span><small>Deadline</small><strong>{formatDeadline(opportunity.deadline)}</strong></span></div>
         <div><AlertTriangle size={17} /><span><small>Urgency</small><strong>{deadlineDistance(opportunity.deadline)}</strong></span></div>
+        <div><Trophy size={17} /><span><small>Reward</small><strong>{opportunity.reward || 'Not confirmed'}</strong></span></div>
         <div><CheckCircle2 size={17} /><span><small>Confidence</small><strong>{evaluation.confidence}/100</strong></span></div>
         {hasPublicSource ? (
           <a href={opportunity.sourceUrl} target="_blank" rel="noreferrer">
             <ExternalLink size={17} /><span>
-              <small>{opportunity.provenance.evidenceRole === 'primary' ? 'Primary source' : 'Reference pattern'}</small>
-              <strong>Open evidence</strong>
+              <small>{opportunity.provenance.evidenceRole === 'primary' ? 'Official opportunity page' : 'Example discovery pattern'}</small>
+              <strong>{opportunity.provenance.evidenceRole === 'primary' ? 'View original contest' : 'View similar source type'}</strong>
             </span>
           </a>
         ) : (
@@ -121,6 +125,15 @@ export function OpportunityPage() {
           </span></div>
         )}
       </section>
+      {illustrative && opportunity.provenance.evidenceRole === 'reference-pattern' ? (
+        <div className="illustrative-source-note">
+          <AlertTriangle size={16} />
+          <span>
+            <strong>This demo opportunity is fictional.</strong>
+            The external link demonstrates where this kind of opportunity may be discovered; it is not the page for this specific contest.
+          </span>
+        </div>
+      ) : null}
 
       <div className="dossier-grid">
         <div className="dossier-main">
@@ -210,9 +223,9 @@ export function OpportunityPage() {
             <p className={`verification-status ${evaluation.verificationStatus}`}>
               {evaluation.verificationStatus.replace('-', ' ')}
             </p>
-            <ScoreBar label="Personal fit" value={evaluation.fit} tone="acid" />
-            <ScoreBar label="Win signal" value={evaluation.winSignal} />
-            <ScoreBar label="Hiddenness" value={evaluation.hiddenness} tone="warm" />
+            <ScoreBar label="Personal fit" value={evaluation.fit} tone="acid" description={scoreDescriptions.fit} />
+            <ScoreBar label="Win signal" value={evaluation.winSignal} description={scoreDescriptions.winSignal} />
+            <ScoreBar label="Hiddenness" value={evaluation.hiddenness} tone="warm" description={scoreDescriptions.hiddenness} />
             <div className="hiddenness-breakdown">
               <span>{evaluation.hiddennessConfidence}% signal confidence</span>
               {evaluation.hiddennessFactors.map((factor) => (
@@ -222,9 +235,9 @@ export function OpportunityPage() {
                 </p>
               ))}
             </div>
-            <ScoreBar label="Strategic value" value={evaluation.strategicValue} />
-            <ScoreBar label="Effort fit" value={evaluation.effortFit} />
-            <ScoreBar label="Risk" value={evaluation.risk} tone="warm" />
+            <ScoreBar label="Strategic value" value={evaluation.strategicValue} description={scoreDescriptions.strategicValue} />
+            <ScoreBar label="Effort fit" value={evaluation.effortFit} description={scoreDescriptions.effortFit} />
+            <ScoreBar label="Risk" value={evaluation.risk} tone="warm" description={scoreDescriptions.risk} />
             <details className="score-explanation">
               <summary>How every score was calculated</summary>
               {([
@@ -250,14 +263,30 @@ export function OpportunityPage() {
           <section className="requirements-card">
             <p className="section-kicker">Participation cost</p>
             <strong>{opportunity.effortHours > 0 ? `${opportunity.effortHours} estimated hours` : 'Effort unknown'}</strong>
+            <dl className="participation-facts">
+              <div><dt>Application burden</dt><dd>{opportunity.applicationBurden}</dd></div>
+              <div><dt>Can enter as</dt><dd>{opportunity.participationModes.join(' · ')}</dd></div>
+              <div><dt>Eligibility</dt><dd>{opportunity.eligibility.length ? opportunity.eligibility.join(' · ') : 'Not confirmed'}</dd></div>
+              {opportunity.entityRequirements.length ? (
+                <div><dt>Entity needed</dt><dd>{opportunity.entityRequirements.join(' · ')}</dd></div>
+              ) : null}
+            </dl>
             <h3>Requirements</h3>
-            <ul>{opportunity.requirements.map((item) => <li key={item}>{item}</li>)}</ul>
+            {opportunity.requirements.length
+              ? <ul>{opportunity.requirements.map((item) => <li key={item}>{item}</li>)}</ul>
+              : <p className="muted-copy">No requirements extracted yet.</p>}
             <h3>Deliverables</h3>
-            <ul>{opportunity.deliverables.map((item) => <li key={item}>{item}</li>)}</ul>
+            {opportunity.deliverables.length
+              ? <ul>{opportunity.deliverables.map((item) => <li key={item}>{item}</li>)}</ul>
+              : <p className="muted-copy">No deliverables extracted yet.</p>}
           </section>
           <section className="sidebar-actions">
             <p className="section-kicker">My decision</p>
-            <button className={currentDecision?.action === 'saved' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'decision', 'saved')}>
+            {feedbackMessage ? <p className="sidebar-feedback" role="status">{feedbackMessage}</p> : null}
+            <button className={currentDecision?.action === 'saved' ? 'selected' : ''} onClick={() => {
+              recordFeedback(opportunity, 'decision', 'saved')
+              setFeedbackMessage('Saved to Library.')
+            }}>
               <Bookmark size={16} /> Save
             </button>
             <button className={currentDecision?.action === 'entered' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'decision', 'entered')}>
@@ -297,18 +326,28 @@ export function OpportunityPage() {
                     decisionNote.trim() || undefined,
                   )
                   setRejecting(false)
+                  setFeedbackMessage('Passed and hidden from today’s radar. You can recover it from Library.')
                 }}>Confirm pass</button>
               </div>
             ) : null}
             <p className="section-kicker">Teach the radar</p>
-            <button className={currentPreference?.action === 'more-like' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'preference', 'more-like')}>
+            <button className={currentPreference?.action === 'more-like' ? 'selected' : ''} onClick={() => {
+              recordFeedback(opportunity, 'preference', 'more-like')
+              setFeedbackMessage('Preference learned. Similar domains will rank higher in future results.')
+            }}>
               <MoreHorizontal size={16} /> More like this
             </button>
-            <button className={currentPreference?.action === 'less-like' ? 'selected' : ''} onClick={() => recordFeedback(opportunity, 'preference', 'less-like')}>
+            <button className={currentPreference?.action === 'less-like' ? 'selected' : ''} onClick={() => {
+              recordFeedback(opportunity, 'preference', 'less-like')
+              setFeedbackMessage('Preference learned. Similar domains will rank lower in future results.')
+            }}>
               <EyeOff size={16} /> Less like this
             </button>
             {hasPublicSource ? (
-              <a href={opportunity.sourceUrl} target="_blank" rel="noreferrer">Verify source <ArrowUpRight size={16} /></a>
+              <a href={opportunity.sourceUrl} target="_blank" rel="noreferrer">
+                {opportunity.provenance.evidenceRole === 'primary' ? 'Open official opportunity' : 'Open example source pattern'}
+                <ArrowUpRight size={16} />
+              </a>
             ) : null}
           </section>
         </aside>

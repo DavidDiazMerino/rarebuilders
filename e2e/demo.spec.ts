@@ -6,6 +6,8 @@ test('judge can reach a scored opportunity and its strategy', async ({ page }) =
   await page.getByRole('button', { name: /explore david’s radar/i }).click()
 
   await expect(page.getByRole('heading', { name: /five opportunities worth your attention/i })).toBeVisible()
+  await expect(page.getByText(/quick demo · 60 seconds/i)).toBeVisible()
+  await expect(page.getByText(/you are using david’s example profile/i)).toBeVisible()
   const cachedDemoCard = page.locator('.opportunity-card').filter({
     hasText: 'Teacher workflow agent pilot',
   })
@@ -102,6 +104,7 @@ test('latest feedback visibly replaces learning and the radar decision', async (
   const title = await firstCard.getByRole('heading').innerText()
   await firstCard.getByRole('button', { name: /more like this/i }).click()
   await expect(firstCard.getByRole('button', { name: /more like this/i })).toHaveClass(/selected/)
+  await expect(page.getByText(/preference learned/i)).toBeVisible()
 
   await page.getByRole('link', { name: 'Builder memory' }).click()
   await expect(page.getByText('Learned from feedback')).toBeVisible()
@@ -111,6 +114,7 @@ test('latest feedback visibly replaces learning and the radar decision', async (
   const updatedCard = page.locator('.opportunity-card').filter({ hasText: title })
   await updatedCard.getByRole('button', { name: /^pass$/i }).click()
   await expect(updatedCard).toHaveCount(0)
+  await expect(page.getByRole('button', { name: /undo pass/i })).toBeVisible()
 
   await page.getByRole('link', { name: 'Library' }).click()
   await page.getByRole('button', { name: 'Passed' }).click()
@@ -163,6 +167,7 @@ test('builder reviews a CV extraction before applying it', async ({ page }) => {
 
   await expect(page.locator('input[value="Product-minded TypeScript builder"]')).toBeVisible()
   await page.getByRole('button', { name: /apply professional profile/i }).click()
+  await expect(page.getByText('Professional profile is in Builder Memory')).toBeVisible()
   await expect(page.getByText('Product-minded TypeScript builder')).toBeVisible()
 })
 
@@ -227,6 +232,8 @@ test('golden path imports the UNESCO call as live evidence without sending the p
   await page.goto('/inbox')
   await page.getByPlaceholder('https://…').fill(sourceUrl)
   await page.getByRole('button', { name: 'Fetch' }).click()
+  await expect(page.getByRole('button', { name: /readable/i })).toHaveClass(/selected/)
+  await expect(page.getByText(/UNESCO International Fund for Cultural Diversity supports projects/i)).toBeVisible()
   await page.getByRole('button', { name: /analyze opportunity/i }).click()
   await expect(page.getByRole('heading', { name: 'International Fund for Cultural Diversity' })).toBeVisible()
   await page.getByRole('button', { name: /add to opportunity pool/i }).click()

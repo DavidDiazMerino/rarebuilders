@@ -9,11 +9,13 @@ import {
   LoaderCircle,
   ScanSearch,
   Sparkles,
+  TextCursorInput,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import type { ConnectorId, Opportunity, OpportunityCandidate } from '../../shared/domain'
 import { PageHeader } from '../components/PageHeader'
+import { SourceTextPreview } from '../components/SourceTextPreview'
 import { api, type GithubOpportunityCandidate, type SourceExtraction } from '../lib/api'
 import { buildRadar } from '../lib/scoring'
 import { candidateId } from '../lib/candidates'
@@ -34,6 +36,19 @@ export function InboxPage() {
   const [preview, setPreview] = useState<Opportunity | null>(null)
   const [activeCandidateId, setActiveCandidateId] = useState('')
   const [activeConnector, setActiveConnector] = useState<ConnectorId>('manual')
+  const [sourceView, setSourceView] = useState<'rendered' | 'raw'>('raw')
+  const detectedFacts = useMemo(() => {
+    const find = (labels: string[]) => {
+      const match = sourceText.split('\n').find((line) =>
+        labels.some((label) => line.trim().toLowerCase().startsWith(`${label}:`)))
+      return match?.slice(match.indexOf(':') + 1).trim() || ''
+    }
+    return {
+      deadline: find(['deadline', 'deadlines', 'submission period', 'end date']),
+      reward: find(['reward', 'prize', 'offer or reward']),
+      organizer: find(['organizer', 'repository']),
+    }
+  }, [sourceText])
 
   useEffect(() => {
     if (location.search.includes('from=discover')) {
@@ -55,6 +70,7 @@ export function InboxPage() {
         setSourceTitle(candidate.title)
         setSourceText(text)
         setFetched(text.length >= 80)
+        setSourceView('rendered')
         setActiveCandidateId(candidate.id)
         setActiveConnector(candidate.connector)
         window.sessionStorage.removeItem('rarebuilders:discovery-candidate')
@@ -82,6 +98,7 @@ export function InboxPage() {
         candidate.body,
       ].join('\n'))
       setFetched(true)
+      setSourceView('rendered')
       setActiveCandidateId(id)
       setActiveConnector('github')
       upsertCandidates([{
@@ -124,6 +141,7 @@ export function InboxPage() {
         warnings: result.data.warnings,
       })
       setFetched(true)
+      setSourceView('rendered')
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'The source could not be fetched.')
     } finally {
@@ -225,6 +243,7 @@ export function InboxPage() {
                   setSourceUrl(event.target.value)
                   setFetched(false)
                   setSourceInfo(null)
+                  setPreview(null)
                 }}
                 placeholder="https://…"
               />
@@ -235,15 +254,39 @@ export function InboxPage() {
             </div>
           </label>
           <div className="source-divider"><span>or paste the source text</span></div>
-          <label className="text-field">
-            <span>Source text {sourceTitle ? <em>{sourceTitle}</em> : null}</span>
-            <textarea
-              value={sourceText}
-              onChange={(event) => setSourceText(event.target.value.slice(0, 30_000))}
-              placeholder="Paste the call, bounty, grant or challenge announcement here…"
-            />
+          <div className="text-field">
+            <span className="source-field-heading">
+              <span>Source evidence {sourceTitle ? <em>{sourceTitle}</em> : null}</span>
+              <span className="source-view-toggle">
+                <button type="button" className={sourceView === 'rendered' ? 'selected' : ''} onClick={() => setSourceView('rendered')}>
+                  <FileSearch size={13} /> Readable
+                </button>
+                <button type="button" className={sourceView === 'raw' ? 'selected' : ''} onClick={() => setSourceView('raw')}>
+                  <TextCursorInput size={13} /> Edit raw
+                </button>
+              </span>
+            </span>
+            {sourceView === 'rendered' ? (
+              <SourceTextPreview text={sourceText} />
+            ) : (
+              <textarea
+                value={sourceText}
+                onChange={(event) => {
+                  setSourceText(event.target.value.slice(0, 30_000))
+                  setPreview(null)
+                }}
+                placeholder="Paste the call, bounty, grant or challenge announcement here…"
+              />
+            )}
             <small>{sourceText.length.toLocaleString()} / 30,000 characters</small>
-          </label>
+          </div>
+          {sourceText ? (
+            <dl className="source-facts-preview">
+              <div><dt>Organizer</dt><dd>{detectedFacts.organizer || 'Not detected yet'}</dd></div>
+              <div><dt>Deadline</dt><dd>{detectedFacts.deadline || 'Not detected yet'}</dd></div>
+              <div><dt>Reward</dt><dd>{detectedFacts.reward || 'Not detected yet'}</dd></div>
+            </dl>
+          ) : null}
           {error ? <div className="inline-error"><AlertTriangle size={17} /> {error}</div> : null}
           {fetched ? (
             <div className="source-extraction-status">

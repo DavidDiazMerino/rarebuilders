@@ -4,6 +4,7 @@ import {
   CircleUserRound,
   Crosshair,
   FileInput,
+  LogOut,
   RotateCcw,
   Sparkles,
 } from 'lucide-react'
@@ -21,7 +22,7 @@ const navItems = [
 ]
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { data, reset } = useAppState()
+  const { data, enterMode, reset } = useAppState()
   const navigate = useNavigate()
   const location = useLocation()
   const refreshingSources = useDailyDiscovery()
@@ -31,9 +32,15 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [location.pathname])
 
   const handleReset = () => {
-    if (!window.confirm('Reset this browser to the welcome screen and clear local RareBuilders data?')) return
+    if (!window.confirm('Return to the welcome screen and delete this browser’s RareBuilders profile, sources and feedback?')) return
     reset()
     navigate('/')
+  }
+
+  const startPersonalProfile = () => {
+    if (!window.confirm('Leave David’s demo and start an empty personal profile? Any sources or feedback added during the demo will be cleared.')) return
+    enterMode('personal')
+    navigate('/profile')
   }
 
   return (
@@ -56,6 +63,19 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
+        {data.mode === 'demo' ? (
+          <div className="mode-card demo">
+            <span>Demo mode</span>
+            <p>You are using David’s example profile. Adding a live source hides sample opportunities, but it does not replace his profile.</p>
+            <button onClick={startPersonalProfile}><CircleUserRound size={14} /> Start my own profile</button>
+          </div>
+        ) : (
+          <div className="mode-card">
+            <span>Your private radar</span>
+            <p>Only the context you review and apply becomes part of Builder Memory.</p>
+          </div>
+        )}
+
         <div className="rail-note">
           <Archive size={17} className={refreshingSources ? 'spin' : ''} />
           <div>
@@ -74,6 +94,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <RotateCcw size={15} />
           </button>
         </div>
+        <button className="leave-product" onClick={handleReset}>
+          <LogOut size={14} /> Exit and choose another starting point
+        </button>
       </aside>
       <main className="product-main">{children}</main>
     </div>
