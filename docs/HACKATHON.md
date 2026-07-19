@@ -3,7 +3,7 @@
 > **Operational source of truth for RareBuilders.** Read this before making
 > product, engineering, asset, licensing, demo, or submission decisions.
 >
-> Last verified against the official Devpost pages: **2026-07-18 (Europe/Madrid)**.
+> Last verified against the official Devpost pages: **2026-07-19 (Europe/Madrid)**.
 > The rules may change. The [Official Rules](https://openai.devpost.com/rules)
 > and official notices always override this summary, so re-check them before
 > the final submission.
