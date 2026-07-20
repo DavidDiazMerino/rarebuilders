@@ -13,7 +13,8 @@ longer capability but focus.
 RareBuilders helps independent builders—and the small, multidisciplinary teams
 they form—decide what deserves their limited time. It does not give them more
 possibilities. They already have too many. It gives them a finite, explainable
-radar of the opportunities where work they already own creates an edge.
+radar of the opportunities where their skills, interests, projects, and
+constraints create an edge.
 
 ## Final English voiceover
 
@@ -24,7 +25,7 @@ radar of the opportunities where work they already own creates an edge.
 > research, design, code, and launch across disciplines. Their problem is no
 > longer capability. It is deciding what deserves their time. RareBuilders
 > turns that potential into a finite, explainable radar of the opportunities
-> where work they already own gives them an edge.
+> where their skills, interests, and existing projects give them an edge.
 
 ### 0:28–0:55 — independent builders and small teams
 

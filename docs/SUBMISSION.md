@@ -11,7 +11,7 @@ submitted until Devpost shows the green confirmation and `Submitted` status.
 | --- | --- |
 | Project name | `RareBuilders` |
 | Track | `Work and Productivity` |
-| Tagline | `Find the opportunity where your existing work gives you an edge.` |
+| Elevator pitch | `An explainable opportunity radar that helps independent builders and small teams match their skills, interests, projects and constraints to opportunities where they have an edge.` |
 | Live demo | `https://rarebuilders.vercel.app` |
 | Repository | `https://github.com/DavidDiazMerino/rarebuilders` |
 | License | `MIT` |
@@ -22,7 +22,8 @@ submitted until Devpost shows the green confirmation and `Submitted` status.
 | YouTube demo | `[PENDING: public URL]` |
 | Codex Session ID | `[PENDING: run /feedback in the primary build thread]` |
 
-The tagline is below Devpost's 140-character standard limit.
+The elevator pitch is 178 characters, below the current 200-character limit
+shown by Devpost.
 
 ## What to enter in Devpost
 
@@ -42,13 +43,14 @@ This legal/eligibility information must be answered by the human entrant.
 ### Step 2 — Project overview
 
 - **Project name:** RareBuilders
-- **Tagline:** Find the opportunity where your existing work gives you an edge.
-- **Thumbnail:** use a clean 3:2 crop of the radar or landing page. Recommended
-  export: 1500 × 1000 PNG, under 5 MB.
+- **Elevator pitch:** An explainable opportunity radar that helps independent
+  builders and small teams match their skills, interests, projects and
+  constraints to opportunities where they have an edge.
+- **Thumbnail:** upload `docs/assets/rarebuilders-devpost-thumbnail.png`
+  (1536 × 1024 PNG, 3:2, approximately 1.3 MB).
 
-The thumbnail should show the product name, the finite radar, and at least
-three real signal labels. Avoid tiny text, browser chrome, and a collage of
-features.
+The thumbnail uses the product's editorial visual language and a five-path
+radar without presenting a generated interface as real product UI.
 
 ### Step 3 — Project details
 
@@ -147,8 +149,8 @@ The most visible opportunity is not always the best use of a builder's time.
 Grants, bounties, competitions, pilots, and open calls are fragmented across
 Devpost, GitHub, institutional pages, newsletters, and regional communities.
 Existing directories are useful for discovery, but they mostly organize what
-is popular. They do not answer a more personal question: **where does the work
-I already own give me an unusual edge?**
+is popular. They do not answer a more personal question: **where do my skills,
+interests, projects, and constraints give me an unusual edge?**
 
 I built RareBuilders because I needed that answer myself. I did not want
 another infinite feed. I wanted a small, honest set of decisions that accounts
@@ -299,7 +301,7 @@ timestamps; shorten pauses during editing instead.
 > research, design, code, and launch across disciplines. Their problem is no
 > longer capability. It is deciding what deserves their time. RareBuilders
 > turns that potential into a finite, explainable radar of the opportunities
-> where work they already own gives them an edge.
+> where their skills, interests, and existing projects give them an edge.
 
 #### 0:28–0:55 — independent builders and small teams
 
@@ -350,7 +352,7 @@ timestamps; shorten pauses during editing instead.
 > already have too many. It gives them the clarity to choose—and turn existing
 > work into leverage.
 
-This script is approximately 344 spoken words. The exact runtime depends on
+This script is approximately 346 spoken words. The exact runtime depends on
 delivery; record it once without rushing, then trim visual pauses to remain
 comfortably below three minutes.
 
