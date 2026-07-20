@@ -271,14 +271,24 @@ visible next candidate and I can understand what changed.
 
 ### What's next for RareBuilders
 
-Next I would expand reliable source coverage beyond hackathons into grants,
-pilots, bounties, residencies, calls for proposals, and local programs. I would
-add deadline monitoring, source-change alerts, and evaluation against actual
-applications and outcomes.
+My first next step would be moving RareBuilders beyond browser-only persistence.
+I would add accounts, durable personal profiles, and a secure database for the
+builder inventory, radar, feedback history, saved decisions, and imported
+sources. That would let me keep one evolving profile across devices instead of
+tying it to a single browser.
 
-I would also explore privacy-preserving shared inventories for the small
-multidisciplinary teams that independent builders sometimes form. That is a
-future direction, not a claim about the current single-builder experience.
+I would keep privacy boundaries explicit: users should choose which CV,
+repository, note, or source becomes part of their persistent profile, while
+private notes remain private by default.
+
+After that foundation, I would expand reliable source coverage beyond
+hackathons into grants, pilots, bounties, residencies, calls for proposals, and
+local programs. I would add deadline monitoring, source-change alerts, and
+evaluation against actual applications and outcomes.
+
+Shared workspaces and privacy-preserving project inventories for small
+multidisciplinary teams would follow the individual account experience. That
+is a future direction, not a claim about the current single-builder product.
 
 My long-term goal is not to predict winners. It is to help independent builders
 allocate scarce time where their skills, interests, and projects create the

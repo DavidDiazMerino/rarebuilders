@@ -9,6 +9,25 @@ export function formatDeadline(value: string | null) {
   }).format(date)
 }
 
+export function formatDeadlineMoment(value: string | null, timeZone?: string) {
+  if (!value) return 'Unknown'
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return value
+
+  const parts = new Intl.DateTimeFormat('en', {
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+    ...(timeZone ? { timeZone } : {}),
+  }).formatToParts(date)
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((item) => item.type === type)?.value ?? ''
+
+  return `${part('month')} ${part('day')} · ${part('hour')}:${part('minute')}`
+}
+
 export function deadlineDistance(value: string | null) {
   if (!value) return 'Needs verification'
   const difference = new Date(value).getTime() - Date.now()

@@ -19,6 +19,7 @@ import { SourceTextPreview } from '../components/SourceTextPreview'
 import { api, type GithubOpportunityCandidate, type SourceExtraction } from '../lib/api'
 import { buildRadar } from '../lib/scoring'
 import { candidateId } from '../lib/candidates'
+import { formatDeadlineMoment } from '../lib/format'
 import { useAppState } from '../state/AppState'
 
 export function InboxPage() {
@@ -317,7 +318,15 @@ export function InboxPage() {
               <h3>{preview.title}</h3>
               <p>{preview.summary}</p>
               <dl>
-                <div><dt>Deadline</dt><dd>{preview.deadline ?? 'Unknown'}</dd></div>
+                <div>
+                  <dt>Deadline</dt>
+                  <dd className="deadline-moment">
+                    <time dateTime={preview.deadline ?? undefined} title={preview.deadline ? `Source timestamp: ${preview.deadline}` : undefined}>
+                      {formatDeadlineMoment(preview.deadline)}
+                    </time>
+                    {preview.deadline ? <span>your local time</span> : null}
+                  </dd>
+                </div>
                 <div><dt>Reward</dt><dd>{preview.reward || 'Unknown'}</dd></div>
                 <div><dt>Confidence</dt><dd>{preview.confidence}/100</dd></div>
                 <div><dt>Evidence</dt><dd>{preview.evidence.length} source-backed items</dd></div>
