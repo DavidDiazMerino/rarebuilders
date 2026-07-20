@@ -159,6 +159,13 @@ npm run build
 npm run test:e2e
 ```
 
+For a concise, recording-friendly proof of the production build, test suites
+and runtime architecture, run:
+
+```bash
+npm run demo:proof
+```
+
 The unit suite covers scoring, learning, storage recovery and SSRF rejection.
 The browser test exercises the exact judge journey in Chromium.
 
