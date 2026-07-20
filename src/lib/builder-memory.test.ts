@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { demoProfile } from '../data/fixtures'
-import { mergeBuilderMemory } from './builder-memory'
+import { compactProjectSourceLabel, mergeBuilderMemory } from './builder-memory'
 
 describe('builder memory imports', () => {
   it('keeps imported projects and their GitHub source in one atomic profile update', () => {
@@ -40,5 +40,16 @@ describe('builder memory imports', () => {
     expect(updated.wildcardDomains).toContain('civic-tech')
     expect(updated.noGoDomains).toContain('generic-devops')
     expect(updated.technologiesToExplore).toContain('Vercel')
+  })
+
+  it('keeps inventory provenance compact and recognizable', () => {
+    expect(compactProjectSourceLabel({
+      sourceLabel: 'Public GitHub repository README; repository described as a private migration backup',
+      sourceUrl: 'https://github.com/example/cashfromchaos',
+    })).toBe('Public GitHub repository')
+
+    expect(compactProjectSourceLabel({
+      sourceLabel: 'Local README',
+    })).toBe('Local README')
   })
 })

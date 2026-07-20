@@ -236,6 +236,8 @@ test('golden path imports the UNESCO call as live evidence without sending the p
   await expect(page.getByText(/UNESCO International Fund for Cultural Diversity supports projects/i)).toBeVisible()
   await page.getByRole('button', { name: /analyze opportunity/i }).click()
   await expect(page.getByRole('heading', { name: 'International Fund for Cultural Diversity' })).toBeVisible()
+  await expect(page.locator('.normalized-preview')).toHaveCSS('color', 'rgb(25, 26, 23)')
+  await expect(page.locator('.normalized-preview')).toHaveCSS('background-color', 'rgb(250, 248, 241)')
   await page.getByRole('button', { name: /add to opportunity pool/i }).click()
   await expect(page.getByText(/live evidence/i)).toBeVisible()
   await expect(page.getByText('UNESCO', { exact: true })).toBeVisible()

@@ -145,21 +145,23 @@ Use these answers when the corresponding fields appear:
 
 ### Inspiration
 
-The most visible opportunity is not always the best use of a builder's time.
+AI has expanded the range of things I can research, design, code, and launch.
+My problem is no longer whether I can explore several disciplines. It is
+deciding which possibility deserves my limited time.
+
 Grants, bounties, competitions, pilots, and open calls are fragmented across
 Devpost, GitHub, institutional pages, newsletters, and regional communities.
-Existing directories are useful for discovery, but they mostly organize what
-is popular. They do not answer a more personal question: **where do my skills,
-interests, projects, and constraints give me an unusual edge?**
+Existing directories help me discover what is popular, but they do not answer
+the question I actually care about: **where do my skills, interests, projects,
+and constraints give me an unusual edge?**
 
 I built RareBuilders because I needed that answer myself. I did not want
-another infinite feed. I wanted a small, honest set of decisions that accounts
-for my skills, constraints, reusable projects, and tolerance for effort and
-risk.
+another infinite feed. I wanted a small, honest set of decisions that could
+help me focus.
 
 ### What it does
 
-RareBuilders turns a builder's selected context into a finite opportunity
+RareBuilders turns the context I choose to provide into a finite opportunity
 radar. It targets two practical opportunities, two rare opportunities, and one
 wildcard. If the available evidence cannot honestly satisfy a bucket, the
 product labels the recommendation **closest available** instead of silently
@@ -167,8 +169,8 @@ changing the definition.
 
 Each opportunity opens into a decision dossier with:
 
-- reasons to pursue it and reasons to walk away;
-- reusable projects and assets from the builder's own inventory;
+- reasons for me to pursue it and reasons to walk away;
+- matching skills, interests, projects, and reusable assets;
 - reward, deadline, eligibility, participation cost, and unknowns;
 - separate Fit, Win Signal, Hiddenness, Strategic Value, Effort, Risk, and
   Confidence signals;
@@ -177,101 +179,110 @@ Each opportunity opens into a decision dossier with:
 - a source-grounded participation angle, hard risks, and three concrete first
   actions.
 
-The user can start immediately with a clearly labelled demo or build a personal
-radar through six decisions. They can add a public URL, pasted text, a CV,
-selected Markdown notes, or selected public GitHub repositories. Public
-discovery connectors support GitHub, Devpost, EU opportunities, and Kaggle.
+I can start with a clearly labelled example or build my own radar through six
+decisions. I can add a public URL, pasted text, a CV, selected Markdown notes,
+or selected public GitHub repositories. Public discovery connectors support
+GitHub, Devpost, EU opportunities, and Kaggle.
 
-Decisions and preferences remain separate. “Pass” removes an item from the
+My decisions and preferences remain separate. “Pass” removes an item from the
 active radar but keeps it recoverable. “More like this” and “Less like this”
-teach canonical domain preferences. Structured pass reasons tune relevant
-constraints, and private notes remain in the browser.
+teach future ranking. Structured pass reasons tune relevant constraints, while
+private notes remain in my browser.
 
-### How we built it
+### How I built it
 
-The product is a React and TypeScript application deployed on Vercel. GPT-5.6
-is integrated through the OpenAI API using validated structured outputs for
-three tasks:
+I built RareBuilders as a React and TypeScript application deployed on Vercel.
+I integrated GPT-5.6 through the OpenAI API using validated structured outputs
+for three tasks:
 
-1. normalize messy opportunity evidence into source-linked facts, inferences,
-   requirements, deadlines, deliverables, and explicit uncertainty;
-2. build an editable project inventory from only the context the user chooses;
-3. generate a builder-specific participation strategy with hard risks and
+1. normalizing messy opportunity evidence into source-linked facts,
+   inferences, requirements, deadlines, deliverables, and explicit uncertainty;
+2. building an editable project inventory from only the context I select;
+3. generating a builder-specific participation strategy with hard risks and
    exactly three first actions.
 
-The model does not own the final decision. TypeScript deterministically
-calculates Fit, Hiddenness, Win Signal, Strategic Value, Effort, Risk, hard
-gates, radar composition, persistence, and feedback learning. Factual analysis
-is cached by normalized source evidence rather than by the mutable user
-profile. Redis-backed atomic reservations protect the shared AI budget, and
-the URL ingestion layer includes SSRF defenses, redirects and content limits.
+I deliberately kept the final decision outside the model. Deterministic
+TypeScript calculates Fit, Hiddenness, Win Signal, Strategic Value, Effort,
+Risk, hard gates, radar composition, persistence, and feedback learning.
+Factual analysis is cached by normalized source evidence rather than by my
+mutable profile. Redis-backed atomic reservations protect the shared AI budget,
+and the URL ingestion layer includes SSRF defenses, redirect controls, and
+content limits.
 
-Codex was my primary implementation collaborator. I used it to audit the
-competition requirements, turn a static prototype into typed domain contracts,
-design the scoring and learning loop, integrate GPT-5.6 structured outputs,
-build and debug source adapters, harden quota and fetch behavior, refine the
-visual system, and construct the test suite. I made the product thesis,
-audience, privacy boundaries, track, interface, budget, and release decisions.
-Codex repeatedly helped expose weak assumptions—for example, model-invented
-hiddenness and misleading fallback buckets—and convert those findings into
-testable product behavior.
+Codex was my primary engineering collaborator. I used it to audit the
+competition requirements, turn my initial static prototype into typed domain
+contracts, design the scoring and learning loop, integrate GPT-5.6 structured
+outputs, build and debug source adapters, harden quota and fetch behavior,
+refine the visual system, and construct the test suite.
 
-### Challenges we ran into
+I made the product thesis, audience, privacy boundaries, track, interface,
+budget, and release decisions. Codex helped me expose weak assumptions—for
+example, model-invented Hiddenness and misleading fallback buckets—and turn
+those findings into testable product behavior.
 
-The hardest challenge was preserving honesty while still making AI useful.
+### Challenges I ran into
+
+My hardest challenge was preserving honesty while still making AI useful.
 Unstructured sources omit fields, use inconsistent terminology, and mix facts
-with promotion. A language model can normalize that material well, but asking
-it to invent a final score creates false precision. We therefore separated
-language interpretation from deterministic decision logic and expose
-uncertainty in the interface.
+with promotion. GPT-5.6 can normalize that material well, but asking it to
+invent a final score would create false precision. I therefore separated
+language interpretation from deterministic decision logic and made uncertainty
+visible in the interface.
 
 Source ingestion created another difficult boundary. A pasted Devpost URL may
 contain tracking parameters, API metadata, dynamic HTML, or partial public
-content. RareBuilders canonicalizes references, combines safe public evidence
-where appropriate, rejects mismatched competition results, and falls back
-honestly when a field is unknown.
+content. I built canonical reference handling that combines safe public
+evidence where appropriate, rejects mismatched competition results, and reports
+unknown fields instead of guessing.
 
 The feedback loop also needed care. Domain labels such as “AI Agents,”
 “ai-agents,” and “AI agents” must teach the same preference, while a new vote
-must replace the user's previous effect rather than accumulate contradictory
-weights. That learning is now canonicalized and reversible.
+must replace the previous effect rather than accumulate contradictory weights.
+I made that learning canonicalized and reversible.
 
-### Accomplishments that we're proud of
+### Accomplishments I'm proud of
 
-- A no-sign-up judge path that communicates the product in about one minute.
-- A real source pipeline that can normalize the OpenAI Build Week page itself.
-- Explainable scoring where observable code owns Hiddenness and ranking.
-- Honest radar composition with visible “closest available” fallbacks.
-- Consent-driven project memory and browser-local private notes.
-- Reversible decisions, structured learning, and candidate history.
-- Quota, cache, URL-safety, and graceful-degradation controls suitable for a
-  public demo.
-- 60 unit tests and 7 end-to-end tests covering the core experience.
+- I created a no-sign-up judge path that communicates the product in about one
+  minute.
+- I built a real source pipeline that can normalize the OpenAI Build Week page
+  itself.
+- I kept Hiddenness and final ranking explainable and deterministic.
+- I made radar composition honest with visible “closest available” fallbacks.
+- I added consent-driven builder memory and browser-local private notes.
+- I made decisions and learned preferences reversible.
+- I added quota, cache, URL-safety, and graceful-degradation controls suitable
+  for a public demo.
+- I finished with 60 unit tests and 7 end-to-end tests covering the core
+  experience.
 
-### What we learned
+### What I learned
 
-Personalization is not just collecting more profile fields. The valuable part
-is connecting a builder's existing assets to the cost and shape of a specific
-opportunity. We also learned that an AI product becomes more credible when it
-shows where the model stops: GPT-5.6 interprets language and proposes strategy;
-observable rules calculate the decision signals.
+I learned that personalization is not just collecting more profile fields. The
+valuable part is connecting my capabilities, interests, constraints, and
+existing assets to the cost and shape of a specific opportunity.
 
-Finally, a finite shortlist creates a better feedback loop than an endless
-feed. Passing one opportunity is meaningful when it promotes a visible next
-candidate and the user can understand what changed.
+I also learned that an AI product becomes more credible when it shows where the
+model stops. GPT-5.6 interprets language and proposes strategy; observable rules
+calculate the decision signals.
+
+Finally, I learned that a finite shortlist creates a better feedback loop than
+an endless feed. Passing one opportunity becomes meaningful when it promotes a
+visible next candidate and I can understand what changed.
 
 ### What's next for RareBuilders
 
 Next I would expand reliable source coverage beyond hackathons into grants,
-pilots, bounties, residencies, calls for proposals, and local programs; add
-deadline monitoring and source-change alerts; and evaluate recommendations
-against actual application and outcome data. I would also develop
-privacy-preserving collaboration so small teams can combine selected project
-inventories without exposing all of their personal context.
+pilots, bounties, residencies, calls for proposals, and local programs. I would
+add deadline monitoring, source-change alerts, and evaluation against actual
+applications and outcomes.
 
-The long-term goal is not to predict winners. It is to help builders allocate
-scarce time where their existing work creates the strongest asymmetric
-advantage.
+I would also explore privacy-preserving shared inventories for the small
+multidisciplinary teams that independent builders sometimes form. That is a
+future direction, not a claim about the current single-builder experience.
+
+My long-term goal is not to predict winners. It is to help independent builders
+allocate scarce time where their skills, interests, and projects create the
+strongest asymmetric advantage.
 
 ## Video: the story to tell
 

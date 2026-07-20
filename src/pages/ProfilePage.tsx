@@ -30,6 +30,7 @@ import type {
 import { BuilderMemoryEditor } from '../components/BuilderMemoryEditor'
 import { PageHeader } from '../components/PageHeader'
 import { api, type GithubRepository, type NoteInput } from '../lib/api'
+import { compactProjectSourceLabel } from '../lib/builder-memory'
 import { useAppState } from '../state/AppState'
 
 const domainOptions = [
@@ -914,7 +915,7 @@ export function ProfilePage() {
           ) : null}
           {data.profile.projects.map((project) => (
             <article key={project.id} className="project-inventory-card">
-              <div><span>{project.status}</span><small>{project.sourceLabel}</small></div>
+              <div><span>{project.status}</span><small>{compactProjectSourceLabel(project)}</small></div>
               <h3>{project.name}</h3>
               <p>{project.summary}</p>
               <div className="tag-row">{project.domains.slice(0, 4).map((item) => <em key={item}>{item}</em>)}</div>

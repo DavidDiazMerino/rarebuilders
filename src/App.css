@@ -2459,7 +2459,12 @@
   gap: 1rem;
   border: 1px solid var(--line-strong);
   padding: 1.25rem;
+  color: var(--ink);
   background: var(--paper-bright);
+}
+
+.analysis-panel .normalized-preview .section-kicker {
+  color: #68710f;
 }
 
 .normalized-preview-status {
