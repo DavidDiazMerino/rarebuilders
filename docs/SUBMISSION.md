@@ -275,61 +275,67 @@ advantage.
 
 The demo should tell one story:
 
-> A builder starts with scattered opportunities and limited time. RareBuilders
-> gives them a finite, explainable radar; proves the reasoning inside a dossier;
-> converts the real OpenAI Build Week page into structured evidence with
-> GPT-5.6; learns from a reversible decision; and shows that Codex helped build
-> the reliable system underneath it.
+> AI is creating a new generation of Renaissance builders with the ability to
+> research, design, code, and launch across disciplines. Their constraint is no
+> longer capability but focus. RareBuilders gives independent builders—and the
+> small, multidisciplinary teams they form—a finite, explainable radar; proves
+> the reasoning inside a dossier; converts the real OpenAI Build Week page into
+> structured evidence with GPT-5.6; learns from a reversible decision; and
+> shows that Codex helped build the reliable system underneath it.
 
 Do not try to demonstrate CV upload, GitHub, Kaggle, EU discovery, daily
 refresh, every profile editor, and every score. Those belong in the written
 entry and screenshots. The video needs one memorable decision path.
 
-### Final English voiceover — target 2:45–2:50
+### Final English voiceover — target 2:45–2:55
 
 Speak naturally at roughly 125–135 words per minute. Do not rush to match the
 timestamps; shorten pauses during editing instead.
 
-#### 0:00–0:16 — problem and promise
+#### 0:00–0:28 — the Renaissance builder
 
-> The most visible opportunity is not always the best use of a builder's time.
-> Grants, bounties, and challenges are fragmented, while directories rank
-> popularity—not personal leverage. RareBuilders finds the opportunity where
-> work you already own gives you an edge.
+> For centuries, people with many talents had to choose a single field. Today,
+> AI is creating a new generation of Renaissance builders—people who can
+> research, design, code, and launch across disciplines. Their problem is no
+> longer capability. It is deciding what deserves their time. RareBuilders
+> turns that potential into a finite, explainable radar of the opportunities
+> where work they already own gives them an edge.
 
-#### 0:16–0:42 — finite radar
+#### 0:28–0:55 — independent builders and small teams
 
-> A judge can enter this clearly labelled example without signing up. Instead
-> of another infinite feed, RareBuilders creates a finite radar: two practical
-> moves, two rare ones, and one wildcard. If the evidence cannot satisfy a
-> bucket, it says “closest available” rather than pretending.
+> A judge can enter this clearly labelled example without signing up.
+> Independent builders—and the small multidisciplinary teams they form—share
+> the same constraint: more capabilities, projects, and directions, but limited
+> time. Instead of an infinite feed, RareBuilders returns two practical moves,
+> two rare ones, and one wildcard. When evidence is insufficient, it says
+> “closest available.”
 
-#### 0:42–1:13 — explainable dossier
+#### 0:55–1:20 — explainable dossier
 
 > Every dossier makes the decision inspectable: reasons for and against,
 > reusable project assets, reward, effort, risk, and missing evidence. Fit and
-> Win Signal are heuristics, not a fake probability of winning. Hiddenness is
+> Win Signal are heuristics, not a fake probability. Hiddenness is
 > calculated from observable source, reach, language, region, and participation
 > signals—not invented by GPT.
 
-#### 1:13–1:54 — real source and GPT-5.6
+#### 1:20–1:58 — real source and GPT-5.6
 
 > Now I will add a real source: OpenAI Build Week itself. RareBuilders combines
-> safe public Devpost evidence and converts the unstructured call into a
-> validated opportunity. GPT-5.6 extracts the deadline, reward, eligibility,
-> requirements, deliverables, and explicit unknowns. It also builds editable
-> project memory from context the user selects and proposes a source-grounded
-> strategy with hard risks and three first actions. Deterministic TypeScript
-> owns the final scores, gates, and ranking.
+> safe public Devpost evidence. GPT-5.6 converts the unstructured call into
+> a validated opportunity: deadline, reward, eligibility, requirements,
+> deliverables, and explicit unknowns. It also builds editable project memory
+> from context the user selects and proposes a source-grounded strategy with
+> hard risks and three first actions. Deterministic TypeScript owns the final
+> scores, gates, and ranking.
 
-#### 1:54–2:15 — reversible learning
+#### 1:58–2:19 — reversible learning
 
 > Decisions and preferences are separate. “More like this” teaches the next
 > ranking. “Pass” hides a card without losing it, a structured reason updates
 > the relevant constraint, and Undo makes a mistake reversible. Private notes
 > never leave the browser.
 
-#### 2:15–2:40 — Codex proof
+#### 2:19–2:44 — Codex proof
 
 > Codex was my primary engineering collaborator. It helped turn a static
 > prototype into typed domain contracts, structured GPT outputs, source
@@ -338,12 +344,13 @@ timestamps; shorten pauses during editing instead.
 > and release decisions; Codex implemented, tested, and challenged them with
 > me.
 
-#### 2:40–2:50 — close
+#### 2:44–2:55 — close
 
-> RareBuilders does not promise a win probability. It helps builders stop
-> chasing visibility and choose where their existing work creates leverage.
+> RareBuilders does not give Renaissance builders more possibilities. They
+> already have too many. It gives them the clarity to choose—and turn existing
+> work into leverage.
 
-This script is approximately 309 spoken words. The exact runtime depends on
+This script is approximately 344 spoken words. The exact runtime depends on
 delivery; record it once without rushing, then trim visual pauses to remain
 comfortably below three minutes.
 
@@ -354,16 +361,17 @@ That is faster and safer than trying to narrate a perfect live take.
 
 | Time | What the viewer sees | Action |
 | --- | --- | --- |
-| 0:00–0:16 | Landing hero | Hold long enough to read the promise and the two paths. |
-| 0:16–0:25 | Demo entry | Click **Explore David's radar**. Let the demo explanation appear. |
-| 0:25–0:42 | Radar | Show the five-card composition and briefly hover Fit, Win Signal, Hiddenness, and Confidence. |
-| 0:42–1:13 | Dossier | Open the first strong card. Show the illustrative-source label, reasons for/against, reusable projects, reward/cost, and observable Hiddenness factors. |
-| 1:13–1:29 | Add Source | In a separate clean browser state, paste `https://openai.devpost.com/` and fetch it. |
-| 1:29–1:54 | GPT result | Show rendered source facts, click Analyze, then reveal the normalized deadline, reward, eligibility, requirements, and deliverables. Pre-warm this exact request before recording. |
-| 1:54–2:15 | Feedback | In the demo state, click **More like this**, then **Pass**, show the recoverable tray/message, and click **Undo**. |
-| 2:15–2:29 | Codex | Show the primary Codex workspace for a few seconds with a safe, representative build/test exchange. Never show secrets or the owner access code. |
-| 2:29–2:40 | Technical proof | Show the test summary and a brief architecture/code view with GPT structured output and deterministic scoring visible. |
-| 2:40–2:50 | Closing product shot | Return to the radar or landing hero and hold on the RareBuilders name. |
+| 0:00–0:18 | Landing hero | Hold on the promise while the Renaissance-builder idea is introduced. |
+| 0:18–0:28 | Product name and paths | Let the words “deciding what deserves their time” land before clicking. |
+| 0:28–0:38 | Demo entry | Click **Explore David's radar**. Let the demo explanation appear. |
+| 0:38–0:55 | Radar | Show the five-card composition and briefly hover Fit, Win Signal, Hiddenness, and Confidence. |
+| 0:55–1:20 | Dossier | Open the first strong card. Show the illustrative-source label, reasons for/against, reusable projects, reward/cost, and observable Hiddenness factors. |
+| 1:20–1:34 | Add Source | In a separate clean browser state, paste `https://openai.devpost.com/` and fetch it. |
+| 1:34–1:58 | GPT result | Show rendered source facts, click Analyze, then reveal the normalized deadline, reward, eligibility, requirements, and deliverables. Pre-warm this exact request before recording. |
+| 1:58–2:19 | Feedback | In the demo state, click **More like this**, then **Pass**, show the recoverable tray/message, and click **Undo**. |
+| 2:19–2:33 | Codex | Show the primary Codex workspace for a few seconds with a safe, representative build/test exchange. Never show secrets or the owner access code. |
+| 2:33–2:44 | Technical proof | Show the test summary and a brief architecture/code view with GPT structured output and deterministic scoring visible. |
+| 2:44–2:55 | Closing product shot | Return to the radar or landing hero and hold on the RareBuilders name. |
 
 The dossier fixture is allowed to be illustrative because the interface says
 so. Do not hide that label. The following real-source scene is what proves that
