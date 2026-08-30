@@ -11,11 +11,13 @@ export function OpportunityCard({
   currentDecision,
   currentPreference,
   onFeedback,
+  referenceDate,
 }: {
   item: RadarItem
   currentDecision?: FeedbackAction
   currentPreference?: FeedbackAction
   onFeedback: (kind: 'decision' | 'preference', action: FeedbackAction) => void
+  referenceDate?: Date
 }) {
   const { opportunity, evaluation, bucket, bucketMatch } = item
   const illustrative = opportunity.provenance.mode === 'illustrative'
@@ -41,7 +43,7 @@ export function OpportunityCard({
       <p className="card-summary">{opportunity.summary}</p>
       <div className="deadline-row">
         <span>{formatDeadline(opportunity.deadline)}</span>
-        <strong>{deadlineDistance(opportunity.deadline)}</strong>
+        <strong>{deadlineDistance(opportunity.deadline, referenceDate)}</strong>
         <span>{opportunity.effortHours > 0 ? `${opportunity.effortHours}h estimated` : 'Effort unknown'}</span>
       </div>
       <p className="card-reward"><span>Reward</span>{opportunity.reward || 'Not confirmed'}</p>

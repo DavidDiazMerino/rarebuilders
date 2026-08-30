@@ -4,13 +4,14 @@ import {
   CircleUserRound,
   Crosshair,
   FileInput,
+  Gauge,
   LogOut,
   RotateCcw,
   Sparkles,
 } from 'lucide-react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useEffect, type ReactNode } from 'react'
-import { useDailyDiscovery } from '../lib/use-daily-discovery'
+import { useSignalFeed } from '../lib/use-signal-feed'
 import { useAppState } from '../state/AppState'
 
 const navItems = [
@@ -18,6 +19,7 @@ const navItems = [
   { to: '/discover', label: 'Discover', icon: Binoculars },
   { to: '/inbox', label: 'Add source', icon: FileInput },
   { to: '/library', label: 'Library', icon: Archive },
+  { to: '/operations', label: 'Operations', icon: Gauge },
   { to: '/profile', label: 'Builder memory', icon: CircleUserRound },
 ]
 
@@ -25,7 +27,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { data, enterMode, reset } = useAppState()
   const navigate = useNavigate()
   const location = useLocation()
-  const refreshingSources = useDailyDiscovery()
+  const refreshingSources = useSignalFeed()
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'instant' })
@@ -80,7 +82,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <Archive size={17} className={refreshingSources ? 'spin' : ''} />
           <div>
             <span>{refreshingSources ? 'Refreshing sources' : 'Local-first memory'}</span>
-            <small>{refreshingSources ? 'Updating today’s candidate pool.' : 'Your profile stays in this browser.'}</small>
+            <small>{refreshingSources ? 'Pulling the latest twice-weekly scan.' : 'Your profile stays in this browser.'}</small>
           </div>
         </div>
 

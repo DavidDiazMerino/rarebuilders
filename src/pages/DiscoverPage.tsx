@@ -10,11 +10,11 @@ import {
   Sparkles,
   Tag,
 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   automatedConnectorIds,
-  type AutomatedConnectorId,
+  type SourceCapability,
   type OpportunityCandidate,
 } from '../../shared/domain'
 import { PageHeader } from '../components/PageHeader'
@@ -22,7 +22,7 @@ import { api, ApiRequestError, type ConnectorSearchResult } from '../lib/api'
 import { candidatePreFitDetails, profileDiscoveryFocus } from '../lib/candidates'
 import { useAppState } from '../state/AppState'
 
-const connectorLabels: Array<{ id: AutomatedConnectorId; label: string }> = [
+const fallbackConnectorLabels = [
   { id: 'github', label: 'GitHub bounties' },
   { id: 'devpost', label: 'Devpost' },
   { id: 'eu', label: 'EU calls' },
@@ -40,25 +40,35 @@ export function DiscoverPage() {
   const navigate = useNavigate()
   const { data, upsertCandidates, updateCandidateStatus, updateConnectorState } = useAppState()
   const [query, setQuery] = useState('')
-  const [selectedConnectors, setSelectedConnectors] = useState<AutomatedConnectorId[]>(
+  const [selectedConnectors, setSelectedConnectors] = useState<string[]>(
     [...automatedConnectorIds],
   )
+  const [capabilities, setCapabilities] = useState<SourceCapability[]>([])
   const [connectorResults, setConnectorResults] = useState<ConnectorSearchResult[]>([])
   const [statusFilter, setStatusFilter] = useState<'all' | OpportunityCandidate['status']>('new')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const profileFocus = useMemo(() => profileDiscoveryFocus(data.profile), [data.profile])
+  const connectorLabels = capabilities
+    .filter((capability) => capability.collectorKinds.includes('search'))
+    .map(({ id, label }) => ({ id, label }))
+  const displayedConnectorLabels = connectorLabels.length ? connectorLabels : fallbackConnectorLabels
+
+  useEffect(() => {
+    void api.sourceCapabilities()
+      .then((response) => setCapabilities(response.data.capabilities))
+      .catch(() => undefined)
+  }, [])
 
   const visibleCandidates = useMemo(() => data.candidates
     .filter((candidate) => candidate.connector !== 'manual')
-    .filter((candidate) => candidate.connector !== 'manual' && selectedConnectors.includes(candidate.connector))
+    .filter((candidate) => candidate.connector !== 'manual')
     .filter((candidate) => statusFilter === 'all' || candidate.status === statusFilter)
     .map((candidate) => ({ candidate, preFit: candidatePreFitDetails(data.profile, candidate) }))
     .sort((left, right) => right.preFit.score - left.preFit.score)
     .slice(0, 25), [
     data.candidates,
     data.profile,
-    selectedConnectors,
     statusFilter,
   ])
 
@@ -120,7 +130,7 @@ export function DiscoverPage() {
       <PageHeader
         eyebrow="Live opportunity connectors"
         title="Search where different kinds of opportunity live."
-        description="GitHub, Devpost, EU calls and Kaggle return raw candidates. Pre-fit is a cheap profile match; GPT-5.6 only runs for candidates you inspect or your daily budget selects."
+        description="Catalogues and monitors return raw candidates. Pre-fit is a cheap local profile match; the twice-weekly source engine spends GPT only after deterministic promotion."
         actions={(
           <button className="button secondary" onClick={() => void search()} disabled={loading || !selectedConnectors.length}>
             <RefreshCw size={16} className={loading ? 'spin' : ''} /> Refresh sources
@@ -130,7 +140,7 @@ export function DiscoverPage() {
 
       <section className="discover-search">
         <div className="connector-selector">
-          {connectorLabels.map((connector) => {
+          {displayedConnectorLabels.map((connector) => {
             const selected = selectedConnectors.includes(connector.id)
             const result = connectorResults.find((item) => item.connector === connector.id)
             const state = data.connectorState[connector.id]
@@ -221,6 +231,7 @@ export function DiscoverPage() {
               <div className="candidate-meta">
                 <span className={`candidate-state ${candidate.status}`}>{candidate.status}</span>
                 <span>{candidate.connector}</span>
+                {candidate.sourcePackId ? <span>{candidate.sourcePackId.replaceAll('-', ' ')}</span> : null}
                 <span>{candidate.organizer}</span>
                 <span>{candidate.deadline
                   ? `Deadline ${new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric' }).format(new Date(candidate.deadline))}`
@@ -229,6 +240,9 @@ export function DiscoverPage() {
               <div className="candidate-title-row">
                 <h2>{candidate.title}</h2>
                 <span className="prefit-score"><strong>{preFit.score}</strong><small>pre-fit</small></span>
+                {typeof candidate.preliminaryHiddenness === 'number' ? (
+                  <span className="prefit-score"><strong>{candidate.preliminaryHiddenness}</strong><small>early hiddenness</small></span>
+                ) : null}
               </div>
               <p>{candidate.summary.slice(0, 400) || 'No description was provided.'}</p>
               {preFit.matches.length || preFit.noGoMatches.length ? (
@@ -240,6 +254,9 @@ export function DiscoverPage() {
               ) : (
                 <p className="profile-match-note muted">No strong profile evidence yet.</p>
               )}
+              {candidate.promotionReasons?.length ? (
+                <p className="profile-match-note muted">Promoted because: {candidate.promotionReasons.slice(0, 2).join(' · ')}</p>
+              ) : null}
               <div className="candidate-footer">
                 <div className="tag-row">
                   {candidate.tags.slice(0, 5).map((tag) => <em key={tag}><Tag size={12} /> {tag}</em>)}

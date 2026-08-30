@@ -20,6 +20,9 @@ Built for **OpenAI Build Week 2026** in the **Work and Productivity** track.
 - Two-step onboarding covering six decisions that materially affect ranking.
 - A daily radar targeting two practical, two rare and one wildcard opportunity,
   with “closest available” disclosure when the source pool cannot satisfy a bucket.
+- A twice-weekly asymmetric source engine with five project-aligned source packs,
+  RSS/Atom and official-page monitors, deterministic promotion, bounded GPT
+  normalization and a visible operations ledger.
 - Transparent scorecards, evidence, unknowns and reasons to enter or walk away.
 - Reuse matching against an editable inventory of existing projects.
 - Decisions (saved, entered, passed) and preferences (more/less like this) are
@@ -32,7 +35,8 @@ Built for **OpenAI Build Week 2026** in the **Work and Productivity** track.
 - Review-before-applying GPT-5.6 builder-memory extraction from selected Markdown and public READMEs, including explicit interests and no-go signals.
 - GPT-5.6 opportunity normalization and tailored participation strategies.
 - Persistent candidate history, decision library and visible learned preferences.
-- Daily connector refresh with a configurable personal 0/2/5 analysis budget.
+- Twice-weekly public-source refresh with at most five automatic analyses per run
+  and a 50-analysis monthly ceiling.
 - Responsive desktop and mobile application shells.
 
 The bundled opportunities are explicitly marked **Illustrative sample**. They
@@ -78,10 +82,10 @@ Public URL / PDF / pasted call / GitHub issue / selected builder notes
                    GPT-5.6 structured output
                             │
                             ▼
-        Opportunity + evidence      Builder project inventory
+        Public signal + evidence    Private builder inventory
                     └──────────────┬──────────────┘
                                    ▼
-                 bounded deterministic score engine
+             browser-local deterministic score engine
                                    ▼
        2 practical · 2 rare · 1 wildcard target
           (closest alternatives are disclosed)
@@ -133,6 +137,8 @@ Environment variables:
 | `UPSTASH_REDIS_REST_TOKEN` or `KV_REST_API_TOKEN` | Live AI only | Upstash REST authentication |
 | `AI_GLOBAL_OPERATION_LIMIT` | No | Hard global reservation ceiling; default `40` |
 | `AI_OWNER_GLOBAL_OPERATION_LIMIT` | No | Monthly personal ceiling; default `150` |
+| `AI_CRON_MONTHLY_LIMIT` | No | Automatic scan analysis ceiling; default `50` |
+| `CRON_SECRET` | Scheduled scans | Protects the Vercel cron endpoint |
 | `OWNER_ACCESS_CODE_SHA256` | No | Enables higher personal limits without accounts |
 | `GITHUB_TOKEN` | No | Raises public GitHub REST limits |
 | `KAGGLE_API_TOKEN` | Kaggle only | Current official Kaggle API token |
@@ -239,6 +245,8 @@ Known limitations:
 
 - broad Discord, Telegram, WeChat, X and newsletter crawling is not claimed or
   implemented;
+- scheduled scans persist only public source state; profiles, feedback and
+  personal memory remain in each browser until account sync is deliberately added;
 - Devpost discovery depends on its public listing API and fails independently
   if that interface changes;
 - Kaggle discovery requires server credentials and its broad competition search

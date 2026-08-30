@@ -12,6 +12,7 @@ import type {
   FeedbackReason,
   Opportunity,
   OpportunityCandidate,
+  DigestSummary,
   Strategy,
 } from '../../shared/domain'
 import { mergeBuilderMemory, type BuilderMemoryImport } from '../lib/builder-memory'
@@ -35,6 +36,7 @@ type Action =
   | { type: 'candidate-status'; candidateId: string; status: CandidateStatus; opportunityId?: string }
   | { type: 'settings'; settings: AppSettings }
   | { type: 'connector-state'; connector: ConnectorId; connectorState: ConnectorState }
+  | { type: 'source-feed'; candidates: OpportunityCandidate[]; opportunities: Opportunity[]; cursor: string; digest: DigestSummary | null }
   | { type: 'add-opportunity'; opportunity: Opportunity }
   | {
       type: 'feedback'
@@ -92,6 +94,27 @@ function reducer(state: AppData, action: Action): AppData {
     return {
       ...state,
       connectorState: { ...state.connectorState, [action.connector]: action.connectorState },
+    }
+  }
+  if (action.type === 'source-feed') {
+    const candidates = new Map(state.candidates.map((candidate) => [candidate.id, candidate]))
+    for (const candidate of action.candidates) {
+      const previous = candidates.get(candidate.id)
+      candidates.set(candidate.id, previous
+        ? { ...candidate, status: previous.status, opportunityId: previous.opportunityId, discoveredAt: previous.discoveredAt }
+        : candidate)
+    }
+    const opportunities = new Map(state.opportunities.map((opportunity) => [opportunity.id, opportunity]))
+    action.opportunities.forEach((opportunity) => opportunities.set(opportunity.id, opportunity))
+    const digests = action.digest
+      ? [action.digest, ...state.digests.filter((digest) => digest.id !== action.digest?.id)].slice(0, 20)
+      : state.digests
+    return {
+      ...state,
+      candidates: retainCandidateHistory([...candidates.values()]),
+      opportunities: [...opportunities.values()],
+      lastSignalCursor: action.cursor || state.lastSignalCursor,
+      digests,
     }
   }
   if (action.type === 'add-opportunity') {
@@ -174,6 +197,7 @@ type AppStateValue = {
   updateCandidateStatus: (candidateId: string, status: CandidateStatus, opportunityId?: string) => void
   updateSettings: (settings: AppSettings) => void
   updateConnectorState: (connector: ConnectorId, connectorState: ConnectorState) => void
+  ingestSourceFeed: (candidates: OpportunityCandidate[], opportunities: Opportunity[], cursor: string, digest: DigestSummary | null) => void
   addOpportunity: (opportunity: Opportunity) => void
   recordFeedback: (
     opportunity: Opportunity,
@@ -208,6 +232,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     updateSettings: (settings) => dispatch({ type: 'settings', settings }),
     updateConnectorState: (connector, connectorState) =>
       dispatch({ type: 'connector-state', connector, connectorState }),
+    ingestSourceFeed: (candidates, opportunities, cursor, digest) =>
+      dispatch({ type: 'source-feed', candidates, opportunities, cursor, digest }),
     addOpportunity: (opportunity) => dispatch({ type: 'add-opportunity', opportunity }),
     recordFeedback: (opportunity, kind, action, reasonCode, note) =>
       dispatch({ type: 'feedback', opportunity, kind, action, reasonCode, note }),

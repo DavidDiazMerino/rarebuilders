@@ -223,7 +223,6 @@ export function ProfilePage() {
   const {
     data,
     updateProfile,
-    updateSettings,
     importBuilderMemory,
     resetLearning,
   } = useAppState()
@@ -592,20 +591,10 @@ export function ProfilePage() {
           </span>
         </div>
         {ownerActive ? (
-          <label>
-            <span>Automatic daily analyses</span>
-            <select
-              value={data.settings.autoAnalysisBudget}
-              onChange={(event) => updateSettings({
-                ...data.settings,
-                autoAnalysisBudget: Number(event.target.value) as 0 | 2 | 5,
-              })}
-            >
-              <option value="0">0 · manual only</option>
-              <option value="2">2 · balanced</option>
-              <option value="5">5 · full daily radar</option>
-            </select>
-          </label>
+          <div>
+            <span>Automatic analyses per source scan</span>
+            <strong>5 maximum · Tuesday and Friday · 50 monthly</strong>
+          </div>
         ) : (
           <div className="personal-access-form">
             <input
