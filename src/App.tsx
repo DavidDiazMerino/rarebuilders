@@ -4,6 +4,7 @@ import { DiscoverPage } from './pages/DiscoverPage'
 import { InboxPage } from './pages/InboxPage'
 import { LibraryPage } from './pages/LibraryPage'
 import { OpportunityPage } from './pages/OpportunityPage'
+import { OperationsPage } from './pages/OperationsPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { RadarPage } from './pages/RadarPage'
 import { WelcomePage } from './pages/WelcomePage'
@@ -20,6 +21,7 @@ function ProductRoutes() {
         <Route path="/inbox" element={<InboxPage />} />
         <Route path="/discover" element={<DiscoverPage />} />
         <Route path="/library" element={<LibraryPage />} />
+        <Route path="/operations" element={<OperationsPage />} />
         <Route path="*" element={<Navigate to="/radar" replace />} />
       </Routes>
     </AppShell>

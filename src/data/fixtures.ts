@@ -1,6 +1,7 @@
 import { emptyCareerProfile, type BuilderProfile, type Opportunity, type ProjectAsset, type Strategy } from '../../shared/domain'
 
 const now = '2026-07-17T12:00:00.000Z'
+export const demoSnapshotTime = now
 
 export const demoProjects: ProjectAsset[] = [
   {
@@ -70,6 +71,7 @@ export const demoProfile: BuilderProfile = {
   teamMode: 'solo',
   participationModes: ['individual', 'team', 'company', 'consortium'],
   projects: demoProjects,
+  memoryItems: [],
   connectedGithubRepositories: [],
   careerProfile: emptyCareerProfile(),
   learnedDomainWeights: {},

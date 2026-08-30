@@ -1,11 +1,25 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { listPublicRepositories, searchOpportunityIssues } from './github'
+import { estimateIssueSaturation, listPublicRepositories, searchOpportunityIssues } from './github'
 
 afterEach(() => {
   vi.unstubAllGlobals()
 })
 
 describe('GitHub public connector', () => {
+  it('measures claims and linked pull requests without calling them competitors', () => {
+    const result = estimateIssueSaturation(
+      'Bounty available.',
+      1_000,
+      [{ body: "I'm working on this" }, { body: '/assign me' }],
+      [
+        { event: 'cross-referenced', subject: { type: 'PullRequest', state: 'open' } },
+        { event: 'cross-referenced', subject: { type: 'PullRequest', state: 'closed', mergedAt: '2026-08-30T10:00:00Z' } },
+      ],
+    )
+    expect(result).toMatchObject({ comments: 1_000, claims: 2, openPullRequests: 1, mergedPullRequests: 1 })
+    expect(result).not.toHaveProperty('competitors')
+  })
+
   it('normalizes public repositories', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify([
       {

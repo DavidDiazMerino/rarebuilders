@@ -22,6 +22,7 @@ import type {
   BuilderProfile,
   CareerProfile,
   ParticipationMode,
+  ProfileMemorySource,
   ProfileSummary,
   ProjectAsset,
   RewardPreference,
@@ -29,8 +30,15 @@ import type {
 } from '../../shared/domain'
 import { BuilderMemoryEditor } from '../components/BuilderMemoryEditor'
 import { PageHeader } from '../components/PageHeader'
+import { ProfileMemoryLedger } from '../components/ProfileMemoryLedger'
 import { api, type GithubRepository, type NoteInput } from '../lib/api'
 import { compactProjectSourceLabel } from '../lib/builder-memory'
+import {
+  careerProfileToApprovedMemory,
+  mergeProfileMemoryItems,
+  profileSummaryToApprovedMemory,
+  reviewProfileMemoryItem,
+} from '../lib/profile-memory'
 import { useAppState } from '../state/AppState'
 
 const domainOptions = [
@@ -49,6 +57,7 @@ type NoteDraft = NoteInput & { selected: boolean }
 type MemoryDraft = {
   summary: ProfileSummary
   repositories: GithubRepository[]
+  source: ProfileMemorySource
 }
 
 const fileToBase64 = async (file: File) => {
@@ -214,8 +223,6 @@ export function ProfilePage() {
   const {
     data,
     updateProfile,
-    updateCareer,
-    updateSettings,
     importBuilderMemory,
     resetLearning,
   } = useAppState()
@@ -233,6 +240,7 @@ export function ProfilePage() {
   const [memoryDraft, setMemoryDraft] = useState<MemoryDraft | null>(null)
   const [cvFile, setCvFile] = useState<File | null>(null)
   const [cvDraft, setCvDraft] = useState<CareerProfile | null>(null)
+  const [cvSourceLabel, setCvSourceLabel] = useState('Reviewed CV')
   const [analyzingCv, setAnalyzingCv] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
@@ -289,6 +297,7 @@ export function ProfilePage() {
         base64: await fileToBase64(cvFile),
       })
       setCvDraft(result.data)
+      setCvSourceLabel(`Reviewed CV · ${cvFile.name}`)
       setCvFile(null)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'CV analysis failed.')
@@ -299,7 +308,15 @@ export function ProfilePage() {
 
   const applyCv = () => {
     if (!cvDraft) return
-    updateCareer(cvDraft)
+    const memoryItems = careerProfileToApprovedMemory(cvDraft, {
+      kind: 'cv',
+      label: cvSourceLabel,
+    })
+    updateProfile({
+      ...data.profile,
+      careerProfile: cvDraft,
+      memoryItems: mergeProfileMemoryItems(data.profile.memoryItems, memoryItems),
+    })
     setCvDraft(null)
     setSuccess('Professional profile updated. The original CV was not stored.')
   }
@@ -373,6 +390,17 @@ export function ProfilePage() {
       setMemoryDraft({
         summary: result.data,
         repositories: selectedRepositoryRecords,
+        source: selectedRepositoryRecords.length
+          ? {
+              kind: 'github',
+              label: `Reviewed GitHub import · ${selectedRepositoryRecords.map((repository) => repository.fullName).join(', ')}`,
+              reference: selectedRepositoryRecords[0]?.url,
+            }
+          : {
+              kind: 'notes',
+              label: `Reviewed notes import · ${selectedNotes.map((note) => note.name).join(', ')}`,
+              reference: selectedNotes[0]?.name,
+            },
       })
       setSuccess('Builder-memory analysis is ready. Review every extracted signal before applying it.')
     } catch (caught) {
@@ -396,6 +424,7 @@ export function ProfilePage() {
       wildcardDomains: memoryDraft.summary.wildcardDomains,
       noGoDomains: memoryDraft.summary.noGoDomains,
       technologies: memoryDraft.summary.technologies,
+      memoryItems: profileSummaryToApprovedMemory(memoryDraft.summary, memoryDraft.source),
       repositories: memoryDraft.repositories.map((repository) => ({
         fullName: repository.fullName,
         url: repository.url,
@@ -537,6 +566,20 @@ export function ProfilePage() {
         </div>
       </section>
 
+      <ProfileMemoryLedger
+        items={data.profile.memoryItems}
+        onReview={(itemId, decision) => {
+          updateProfile({
+            ...data.profile,
+            memoryItems: data.profile.memoryItems.map((item) =>
+              item.id === itemId ? reviewProfileMemoryItem(item, decision) : item),
+          })
+          setSuccess(decision === 'approved'
+            ? 'Memory approved. It is now part of your reviewed builder profile.'
+            : 'Memory rejected. It stays in the audit trail and will not be treated as a positive signal.')
+        }}
+      />
+
       <section className="personal-access">
         <div>
           <KeyRound size={18} />
@@ -548,20 +591,10 @@ export function ProfilePage() {
           </span>
         </div>
         {ownerActive ? (
-          <label>
-            <span>Automatic daily analyses</span>
-            <select
-              value={data.settings.autoAnalysisBudget}
-              onChange={(event) => updateSettings({
-                ...data.settings,
-                autoAnalysisBudget: Number(event.target.value) as 0 | 2 | 5,
-              })}
-            >
-              <option value="0">0 · manual only</option>
-              <option value="2">2 · balanced</option>
-              <option value="5">5 · full daily radar</option>
-            </select>
-          </label>
+          <div>
+            <span>Automatic analyses per source scan</span>
+            <strong>5 maximum · Tuesday and Friday · 50 monthly</strong>
+          </div>
         ) : (
           <div className="personal-access-form">
             <input
@@ -892,6 +925,17 @@ export function ProfilePage() {
           ) : null}
           {data.feedback.length ? (
             <section className="learned-signals">
+              <span>Opportunity decisions</span>
+              {[...data.feedback].slice(-5).reverse().map((event) => {
+                const opportunity = data.opportunities.find((item) => item.id === event.opportunityId)
+                return (
+                  <div className="profile-decision-row" key={event.id}>
+                    <strong>{opportunity?.title ?? 'Opportunity no longer in the pool'}</strong>
+                    <small>{event.action}{event.reasonCode ? ` · ${event.reasonCode}` : ''}</small>
+                  </div>
+                )
+              })}
+              <button onClick={() => navigate('/library')}>Open full decision history</button>
               <span>Learned from feedback</span>
               {Object.entries(data.profile.learnedDomainWeights)
                 .sort(([, left], [, right]) => right - left)

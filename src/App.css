@@ -9,6 +9,112 @@
   text-transform: uppercase;
 }
 
+.scan-digest,
+.operations-message,
+.latest-scan-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 0 0 1rem;
+  padding: 1rem 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: color-mix(in srgb, var(--paper) 92%, var(--accent));
+}
+
+.scan-digest > div {
+  display: grid;
+  flex: 1;
+  gap: 0.15rem;
+}
+
+.scan-digest span,
+.operations-metrics span,
+.source-pack-card span {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.scan-digest small {
+  color: var(--muted);
+}
+
+.scan-digest a {
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.operations-metrics,
+.source-pack-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.operations-metrics article,
+.source-pack-card {
+  display: grid;
+  gap: 0.5rem;
+  padding: 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--paper);
+}
+
+.operations-metrics strong {
+  font-family: var(--display);
+  font-size: 1.25rem;
+}
+
+.latest-scan-card {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.latest-scan-card > div,
+.latest-scan-card small {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.latest-scan-card p {
+  margin: 0;
+}
+
+.source-pack-grid {
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.source-pack-card > div {
+  display: flex;
+  justify-content: space-between;
+}
+
+.source-pack-card h2,
+.source-pack-card p {
+  margin: 0;
+}
+
+.source-pack-card.paused {
+  opacity: 0.62;
+}
+
+@media (max-width: 800px) {
+  .operations-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .scan-digest {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
 .brand-lockup {
   display: flex;
   align-items: center;
@@ -1665,6 +1771,139 @@
 .profile-overview > div > strong {
   font-family: Newsreader, Georgia, serif;
   font-size: 1.1rem;
+}
+
+.profile-memory-ledger {
+  display: grid;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--ink);
+  padding: 1.1rem;
+  background: var(--paper-bright);
+}
+
+.profile-memory-ledger > .section-heading > span,
+.profile-memory-section-heading > span {
+  color: var(--ink-faint);
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.profile-memory-sections {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.profile-memory-section {
+  min-width: 0;
+  border: 1px solid var(--line);
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.profile-memory-section.pending {
+  border-top: 3px solid var(--accent);
+}
+
+.profile-memory-section.approved {
+  border-top: 3px solid var(--positive);
+}
+
+.profile-memory-section.rejected {
+  border-top: 3px solid var(--ink-faint);
+}
+
+.profile-memory-section-heading,
+.profile-memory-item-heading,
+.profile-memory-source,
+.profile-memory-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.profile-memory-section-heading h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.profile-memory-item {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.7rem;
+}
+
+.profile-memory-item-heading {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.profile-memory-item-heading > span,
+.profile-memory-source > span {
+  color: var(--ink-faint);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.profile-memory-item p,
+.profile-memory-item blockquote,
+.profile-memory-empty {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.profile-memory-source {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.profile-memory-source a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.profile-memory-item details,
+.profile-memory-item blockquote {
+  border-left: 2px solid var(--line);
+  padding-left: 0.6rem;
+}
+
+.profile-memory-item summary {
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-size: 0.68rem;
+}
+
+.profile-memory-item ul {
+  margin: 0.45rem 0 0;
+  padding-left: 1rem;
+  font-size: 0.72rem;
+}
+
+.profile-memory-actions {
+  justify-content: flex-end;
+}
+
+.profile-memory-actions .button {
+  min-height: 2rem;
+  padding: 0.38rem 0.55rem;
+  font-size: 0.65rem;
+}
+
+@media (max-width: 860px) {
+  .profile-memory-sections {
+    grid-template-columns: 1fr;
+  }
 }
 
 .profile-layout {

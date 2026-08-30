@@ -1,8 +1,10 @@
 import type {
   BuilderProfile,
   ConnectedGithubRepository,
+  ProfileMemoryItem,
   ProjectAsset,
 } from '../../shared/domain'
+import { mergeProfileMemoryItems } from './profile-memory'
 
 export type BuilderMemoryImport = {
   projects: ProjectAsset[]
@@ -11,6 +13,7 @@ export type BuilderMemoryImport = {
   wildcardDomains: string[]
   noGoDomains: string[]
   technologies: string[]
+  memoryItems: ProfileMemoryItem[]
   repositories: ConnectedGithubRepository[]
 }
 
@@ -70,6 +73,7 @@ export function mergeBuilderMemory(profile: BuilderProfile, input: BuilderMemory
     wildcardDomains: [...new Set([...profile.wildcardDomains, ...input.wildcardDomains])],
     noGoDomains: [...new Set([...profile.noGoDomains, ...input.noGoDomains])],
     technologiesToExplore: [...new Set([...profile.technologiesToExplore, ...input.technologies])],
+    memoryItems: mergeProfileMemoryItems(profile.memoryItems, input.memoryItems),
     connectedGithubRepositories: [...byRepository.values()],
   }
 }

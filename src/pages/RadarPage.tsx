@@ -1,9 +1,10 @@
-import { CheckCircle2, EyeOff, FilePlus2, SlidersHorizontal, Sparkles } from 'lucide-react'
+import { Activity, CheckCircle2, EyeOff, FilePlus2, SlidersHorizontal, Sparkles } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { FeedbackAction, FeedbackKind } from '../../shared/domain'
 import { OpportunityCard } from '../components/OpportunityCard'
 import { PageHeader } from '../components/PageHeader'
+import { demoSnapshotTime } from '../data/fixtures'
 import { buildRadar } from '../lib/scoring'
 import { useAppState } from '../state/AppState'
 
@@ -20,9 +21,19 @@ export function RadarPage() {
     if (data.mode !== 'demo' || window.sessionStorage.getItem('rarebuilders:demo-guide-seen')) return
     setShowDemoGuide(true)
   }, [data.mode])
+  const hasLiveOpportunities = data.opportunities.some((opportunity) => opportunity.provenance.mode === 'live')
+  const referenceDate = useMemo(
+    () => hasLiveOpportunities ? new Date() : new Date(demoSnapshotTime),
+    [hasLiveOpportunities],
+  )
   const radar = useMemo(
-    () => buildRadar(data.profile, data.opportunities, data.feedback),
-    [data.profile, data.opportunities, data.feedback],
+    () => buildRadar(
+      data.profile,
+      data.opportunities,
+      data.feedback,
+      referenceDate,
+    ),
+    [data.profile, data.opportunities, data.feedback, referenceDate],
   )
   const feedbackByOpportunity = new Map(
     data.feedback.map((event) => [`${event.opportunityId}:${event.kind}`, event.action]),
@@ -47,11 +58,12 @@ export function RadarPage() {
     month: 'long',
     day: 'numeric',
   }).format(new Date())
+  const latestDigest = data.digests[0]
 
   return (
     <div className="page">
       <PageHeader
-        eyebrow={date}
+        eyebrow={hasLiveOpportunities ? date : `Illustrative snapshot · ${new Intl.DateTimeFormat('en', { month: 'long', day: 'numeric', year: 'numeric' }).format(referenceDate)}`}
         title={radar.length === 5
           ? 'Five opportunities worth your attention.'
           : radar.length === 1
@@ -65,6 +77,17 @@ export function RadarPage() {
           </>
         )}
       />
+      {latestDigest ? (
+        <section className="scan-digest" aria-label="Latest source scan">
+          <Activity size={18} />
+          <div>
+            <span>Latest twice-weekly scan</span>
+            <strong>{latestDigest.newSignals} changed signals · {latestDigest.promotedSignals} promoted · {latestDigest.analysesUsed} GPT analyses</strong>
+            <small>{new Intl.DateTimeFormat('en', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(latestDigest.generatedAt))}{latestDigest.sourceErrors ? ` · ${latestDigest.sourceErrors} source issue${latestDigest.sourceErrors === 1 ? '' : 's'}` : ''}</small>
+          </div>
+          <Link to="/operations">Open operations</Link>
+        </section>
+      ) : null}
       {showDemoGuide ? (
         <section className="demo-guide" aria-label="Demo walkthrough">
           <div>
@@ -149,6 +172,7 @@ export function RadarPage() {
                 action,
               })
             }}
+            referenceDate={referenceDate}
           />
         )) : (
           <section className="empty-state">

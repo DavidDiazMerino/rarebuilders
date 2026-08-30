@@ -86,7 +86,8 @@ Build Week implementation now covers the promised end-to-end product loop:
   candidate contract;
 - editable CV-derived professional evidence without retaining the raw file;
 - persistent source states, full decision history and a decision library;
-- daily source refresh with a protected personal automatic-analysis budget;
+- twice-weekly public source monitoring with a five-analysis run ceiling,
+  deterministic promotion and a 50-analysis monthly ceiling;
 - structured GPT-5.6 profile, opportunity and strategy analysis;
 - an evidence-linked dossier with facts, inferences and unknowns;
 - bounded deterministic scoring and a 2 practical / 2 rare / 1 wildcard radar;
@@ -94,10 +95,10 @@ Build Week implementation now covers the promised end-to-end product loop:
 - labelled fixtures and cached strategies for a deterministic judge path;
 - a responsive editorial application shell, unit tests and a Chromium journey.
 
-The remaining work is operational rather than core product implementation:
-configure hosted OpenAI/Upstash credentials, deploy and smoke-test the live
-functions, publish the repository, then prepare the video and Devpost entry.
-Broad private-community crawling and account sync remain explicit non-goals.
+The asymmetric-source implementation adds a registry, source packs, RSS/Atom
+and page monitoring, a public signal feed and an operator ledger. Profiles and
+feedback remain local-first; account sync and broad private-community crawling
+remain explicit later phases.
 
 ## Hackathon MVP promise
 

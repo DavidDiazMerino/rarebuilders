@@ -1,13 +1,13 @@
 import { z } from 'zod'
-import { connectorIdSchema } from '../../shared/domain.js'
 import { mapWithConcurrency } from '../_lib/concurrency.js'
-import { searchConnector } from '../_lib/connectors.js'
 import { clientIp, requestId, requireMethod, sendData, sendError } from '../_lib/http.js'
 import { reservePublicRequest } from '../_lib/rate-limit.js'
+import { hasSourceAdapter, searchRegisteredSource } from '../_lib/source-registry.js'
 import type { VercelRequest, VercelResponse } from '../_lib/vercel-types.js'
 
 const requestSchema = z.object({
-  connectors: z.array(connectorIdSchema.exclude(['manual'])).min(1).max(4),
+  connectors: z.array(z.string().min(1).max(80)).min(1).max(8)
+    .refine((ids) => ids.every((id) => hasSourceAdapter(id)), 'Unknown source adapter.'),
   query: z.string().max(240).default(''),
 })
 
@@ -27,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const results = await mapWithConcurrency(
       body.connectors,
       2,
-      (connector) => searchConnector(connector, body.query),
+      (connector) => searchRegisteredSource(connector, body.query),
     )
     sendData(res, results, { cached: false, requestId: id })
   } catch (error) {
@@ -35,7 +35,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       res,
       400,
       'invalid_discovery_search',
-      error instanceof z.ZodError ? 'Select between one and four connectors.' : 'Discovery search could not be parsed.',
+      error instanceof z.ZodError ? 'Select between one and eight available source adapters.' : 'Discovery search could not be parsed.',
       id,
     )
   }

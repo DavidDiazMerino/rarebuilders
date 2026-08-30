@@ -18,6 +18,9 @@ test-results
 .env.*
 !.env.example
 
+# Private local profile inputs and generated imports
+inbox/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

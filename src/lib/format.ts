@@ -28,9 +28,9 @@ export function formatDeadlineMoment(value: string | null, timeZone?: string) {
   return `${part('month')} ${part('day')} · ${part('hour')}:${part('minute')}`
 }
 
-export function deadlineDistance(value: string | null) {
+export function deadlineDistance(value: string | null, referenceDate = new Date()) {
   if (!value) return 'Needs verification'
-  const difference = new Date(value).getTime() - Date.now()
+  const difference = new Date(value).getTime() - referenceDate.getTime()
   const days = Math.ceil(difference / 86_400_000)
   if (days < 0) return 'Closed'
   if (days === 0) return 'Closes today'

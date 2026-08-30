@@ -1,14 +1,16 @@
 import type {
   ApiFailure,
   ApiSuccess,
-  AutomatedConnectorId,
   BuilderProfile,
   CareerProfile,
+  DigestSummary,
   Opportunity,
   OpportunityCandidate,
   OpportunityAnalysis,
   ProfileSummary,
   Strategy,
+  ScanRun,
+  SourceCapability,
 } from '../../shared/domain'
 
 export class ApiRequestError extends Error {
@@ -82,7 +84,7 @@ export type GithubOpportunityCandidate = {
 }
 
 export type ConnectorSearchResult = {
-  connector: AutomatedConnectorId
+  connector: string
   candidates: OpportunityCandidate[]
   configured: boolean
   error?: string
@@ -135,9 +137,35 @@ export const api = {
     request<GithubProjectInput>(`/api/github/repository-context?owner=${encodeURIComponent(owner)}&repo=${encodeURIComponent(repo)}`),
   githubOpportunities: (query: string) =>
     request<GithubOpportunityCandidate[]>(`/api/github/opportunities?q=${encodeURIComponent(query)}`),
-  discover: (connectors: AutomatedConnectorId[], query: string) =>
+  discover: (connectors: string[], query: string) =>
     request<ConnectorSearchResult[]>('/api/discover/search', {
       method: 'POST',
       body: JSON.stringify({ connectors, query }),
     }),
+  sourceCapabilities: () => request<{
+    capabilities: SourceCapability[]
+    packs: Array<{ id: string; label: string; description: string; wildcard: boolean; sourceCount: number }>
+  }>('/api/sources?action=capabilities'),
+  signalFeed: (cursor: string) => request<{
+    cursor: string
+    candidates: OpportunityCandidate[]
+    opportunities: Opportunity[]
+    digest: DigestSummary | null
+  }>(`/api/sources?action=feed&cursor=${encodeURIComponent(cursor)}&limit=100`),
+  sourceStatus: () => request<{
+    owner: boolean
+    updatedAt: string | null
+    latestRun: ScanRun | null
+    sourceCount: number
+    signalCount: number
+    candidateCount: number
+    pausedPackIds: string[]
+    monthlyAnalysisUsage?: number
+  }>('/api/sources?action=status'),
+  sourceControl: (input:
+    | { action: 'pause' | 'resume'; packId: string }
+    | { action: 'dry-run' | 'scan' }) => request<ScanRun | { pausedPackIds: string[] }>('/api/sources?action=control', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  }),
 }

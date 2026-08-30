@@ -24,27 +24,44 @@ import {
 
 export const STORAGE_KEY = 'rarebuilders:v1'
 
+const defaultEnabledSourcePackIds = [
+  'agent-infrastructure',
+  'sports-vision',
+  'creative-publishing',
+  'hardware-robotics',
+  'science-wildcard',
+]
+
+const defaultSettings = () => ({
+  autoAnalysisBudget: 0 as const,
+  enabledSourcePackIds: [...defaultEnabledSourcePackIds],
+})
+
 export const demoAppData = (): AppData => ({
-  version: 3,
+  version: 4,
   profile: structuredClone(demoProfile),
   opportunities: structuredClone(demoOpportunities),
   candidates: [],
   feedback: [],
   strategies: structuredClone(demoStrategies),
-  settings: { autoAnalysisBudget: 0 },
+  settings: defaultSettings(),
   connectorState: {},
+  lastSignalCursor: '',
+  digests: [],
   mode: null,
 })
 
 export const personalAppData = (): AppData => ({
-  version: 3,
+  version: 4,
   profile: emptyPersonalProfile(),
   opportunities: structuredClone(personalSampleOpportunities),
   candidates: [],
   feedback: [],
   strategies: {},
-  settings: { autoAnalysisBudget: 0 },
+  settings: defaultSettings(),
   connectorState: {},
+  lastSignalCursor: '',
+  digests: [],
   mode: 'personal',
 })
 
@@ -56,7 +73,7 @@ export function loadAppData(): AppData {
     const raw = window.localStorage.getItem(STORAGE_KEY)
     if (!raw) return initialAppData()
     const parsed = JSON.parse(raw) as Omit<Partial<AppData>, 'version'> & { version?: number }
-    if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== 3) return initialAppData()
+    if (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== 3 && parsed.version !== 4) return initialAppData()
     const profile = builderProfileSchema.parse({
       ...(parsed.profile as object),
       learnedConstraintWeights: (parsed.profile as BuilderProfile | undefined)?.learnedConstraintWeights ?? {},
@@ -99,7 +116,7 @@ export function loadAppData(): AppData {
     }
     const settings = appSettingsSchema.safeParse(parsed.settings)
     return {
-      version: 3,
+      version: 4,
       profile: {
         ...profile,
         learnedDomainWeights: feedback.length
@@ -117,8 +134,17 @@ export function loadAppData(): AppData {
       candidates: retainCandidateHistory(validatedItems(parsed.candidates, opportunityCandidateSchema)),
       feedback,
       strategies,
-      settings: settings.success ? settings.data : { autoAnalysisBudget: 0 },
+      settings: settings.success
+        ? {
+            ...settings.data,
+            enabledSourcePackIds: settings.data.enabledSourcePackIds.length
+              ? settings.data.enabledSourcePackIds
+              : [...defaultEnabledSourcePackIds],
+          }
+        : defaultSettings(),
       connectorState,
+      lastSignalCursor: typeof parsed.lastSignalCursor === 'string' ? parsed.lastSignalCursor : '',
+      digests: Array.isArray(parsed.digests) ? parsed.digests.slice(-20) as AppData['digests'] : [],
       mode,
     }
   } catch {
@@ -205,6 +231,7 @@ export function emptyPersonalProfile(): BuilderProfile {
     teamMode: 'either',
     participationModes: ['individual', 'team'],
     projects: [],
+    memoryItems: [],
     connectedGithubRepositories: [],
     careerProfile: {
       headline: '',

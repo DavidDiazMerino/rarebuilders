@@ -9,7 +9,7 @@ import { searchOpportunityIssues } from './github.js'
 import { PublicError } from './http.js'
 
 export type ConnectorSearchResult = {
-  connector: AutomatedConnectorId
+  connector: string
   candidates: OpportunityCandidate[]
   configured: boolean
   error?: string
@@ -272,7 +272,11 @@ export async function searchGithubCandidates(query: string): Promise<Opportunity
       const hasOpportunitySignal = /\b(bounty|reward|prize|grant|paid task|compensation)\b/.test(text)
         || /(?:[$€£]\s?\d|\d[\d,.]*\s?(?:usd|usdc|eur|sats|tokens?))\b/i.test(text)
       const looksLikeFeed = /\b(daily|weekly) (?:update|report|pulse)\b|github update|active vulnerability tracker/i.test(item.title)
-      return hasOpportunitySignal && !looksLikeFeed
+      const saturated = item.comments >= 200
+        || item.saturation.claims >= 4
+        || item.saturation.openPullRequests >= 3
+        || item.saturation.mergedPullRequests > 0
+      return hasOpportunitySignal && !looksLikeFeed && !saturated
     })
     .map((item): OpportunityCandidate => ({
     id: idFor('github', String(item.id)),
@@ -283,7 +287,7 @@ export async function searchGithubCandidates(query: string): Promise<Opportunity
     organizer: item.repository,
     summary: item.body.slice(0, 700),
     deadline: null,
-    reward: '',
+    reward: `${item.title}\n${item.body}`.match(/(?:[$€£]\s?\d[\d,.]*|\d[\d,.]*\s?(?:USD|USDC|EUR|sats|tokens?))/i)?.[0] ?? '',
     region: 'global',
     language: 'English',
     tags: item.labels,
@@ -298,6 +302,10 @@ export async function searchGithubCandidates(query: string): Promise<Opportunity
     discoveredAt: seenAt,
     lastSeenAt: seenAt,
     status: 'new',
+    saturation: item.saturation,
+    promotionReasons: item.saturation.confidence >= 80
+      ? ['GitHub claims and linked pull requests inspected']
+      : ['GitHub saturation estimated from visible issue metadata'],
     }))
 }
 
