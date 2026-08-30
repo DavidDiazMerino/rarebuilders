@@ -205,6 +205,7 @@ export function emptyPersonalProfile(): BuilderProfile {
     teamMode: 'either',
     participationModes: ['individual', 'team'],
     projects: [],
+    memoryItems: [],
     connectedGithubRepositories: [],
     careerProfile: {
       headline: '',

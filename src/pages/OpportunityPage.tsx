@@ -16,6 +16,7 @@ import { useMemo, useState } from 'react'
 import { Link, useParams, useSearchParams } from 'react-router-dom'
 import type { FeedbackReason } from '../../shared/domain'
 import { ScoreBar } from '../components/ScoreBar'
+import { demoSnapshotTime } from '../data/fixtures'
 import { api } from '../lib/api'
 import { deadlineDistance, formatDeadline } from '../lib/format'
 import { scoreDescriptions } from '../lib/score-descriptions'
@@ -35,7 +36,13 @@ export function OpportunityPage() {
   const [feedbackMessage, setFeedbackMessage] = useState('')
 
   const evaluation = useMemo(
-    () => opportunity ? evaluateOpportunity(data.profile, opportunity) : null,
+    () => opportunity
+      ? evaluateOpportunity(
+          data.profile,
+          opportunity,
+          opportunity.provenance.mode === 'illustrative' ? new Date(demoSnapshotTime) : new Date(),
+        )
+      : null,
     [data.profile, opportunity],
   )
 
@@ -108,7 +115,7 @@ export function OpportunityPage() {
 
       <section className="facts-strip">
         <div><Clock3 size={17} /><span><small>Deadline</small><strong>{formatDeadline(opportunity.deadline)}</strong></span></div>
-        <div><AlertTriangle size={17} /><span><small>Urgency</small><strong>{deadlineDistance(opportunity.deadline)}</strong></span></div>
+        <div><AlertTriangle size={17} /><span><small>Urgency</small><strong>{opportunity.provenance.mode === 'illustrative' ? 'Illustrative snapshot' : deadlineDistance(opportunity.deadline)}</strong></span></div>
         <div><Trophy size={17} /><span><small>Reward</small><strong>{opportunity.reward || 'Not confirmed'}</strong></span></div>
         <div><CheckCircle2 size={17} /><span><small>Confidence</small><strong>{evaluation.confidence}/100</strong></span></div>
         {hasPublicSource ? (

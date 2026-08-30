@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import type { FeedbackAction, FeedbackKind } from '../../shared/domain'
 import { OpportunityCard } from '../components/OpportunityCard'
 import { PageHeader } from '../components/PageHeader'
+import { demoSnapshotTime } from '../data/fixtures'
 import { buildRadar } from '../lib/scoring'
 import { useAppState } from '../state/AppState'
 
@@ -21,7 +22,14 @@ export function RadarPage() {
     setShowDemoGuide(true)
   }, [data.mode])
   const radar = useMemo(
-    () => buildRadar(data.profile, data.opportunities, data.feedback),
+    () => buildRadar(
+      data.profile,
+      data.opportunities,
+      data.feedback,
+      data.opportunities.some((opportunity) => opportunity.provenance.mode === 'live')
+        ? new Date()
+        : new Date(demoSnapshotTime),
+    ),
     [data.profile, data.opportunities, data.feedback],
   )
   const feedbackByOpportunity = new Map(

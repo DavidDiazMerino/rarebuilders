@@ -27,6 +27,7 @@ describe('local application storage', () => {
       connectedGithubRepositories: _repositories,
       careerProfile: _career,
       participationModes: _modes,
+      memoryItems: _memoryItems,
       ...legacyProfile
     } = data.profile
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
@@ -41,6 +42,7 @@ describe('local application storage', () => {
     const restored = loadAppData()
 
     expect(restored.profile.connectedGithubRepositories).toEqual([])
+    expect(restored.profile.memoryItems).toEqual([])
     expect(restored.profile.projects).toHaveLength(data.profile.projects.length)
     expect(restored.profile.careerProfile.skills).toEqual([])
     expect(restored.candidates).toEqual([])
@@ -71,6 +73,7 @@ describe('local application storage', () => {
     expect(profile.domains).toEqual([])
     expect(profile.noGoDomains).toEqual([])
     expect(profile.projects).toEqual([])
+    expect(profile.memoryItems).toEqual([])
     expect(profile.name).toBe('Builder')
   })
 

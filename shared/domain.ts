@@ -80,6 +80,43 @@ export const connectedGithubRepositorySchema = z.object({
 })
 export type ConnectedGithubRepository = z.infer<typeof connectedGithubRepositorySchema>
 
+export const profileMemoryKindSchema = z.enum([
+  'preference',
+  'capability',
+  'asset',
+  'idea',
+  'achievement',
+  'constraint',
+  'goal',
+])
+export type ProfileMemoryKind = z.infer<typeof profileMemoryKindSchema>
+
+export const profileMemoryReviewStatusSchema = z.enum(['pending', 'approved', 'rejected', 'archived'])
+export type ProfileMemoryReviewStatus = z.infer<typeof profileMemoryReviewStatusSchema>
+
+export const profileMemorySourceSchema = z.object({
+  kind: z.enum(['user', 'feedback', 'cv', 'github', 'notes', 'repository', 'web', 'system']),
+  label: z.string().min(1),
+  reference: z.string().optional(),
+})
+export type ProfileMemorySource = z.infer<typeof profileMemorySourceSchema>
+
+export const profileMemoryItemSchema = z.object({
+  id: z.string(),
+  kind: profileMemoryKindSchema,
+  title: z.string().min(1),
+  detail: z.string(),
+  tags: z.array(z.string()),
+  source: profileMemorySourceSchema,
+  evidence: z.array(z.string()),
+  reviewStatus: profileMemoryReviewStatusSchema,
+  reviewNote: z.string().optional(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  reviewedAt: z.string().optional(),
+})
+export type ProfileMemoryItem = z.infer<typeof profileMemoryItemSchema>
+
 export const builderProfileSchema = z.object({
   id: z.string(),
   name: z.string().min(1),
@@ -95,6 +132,7 @@ export const builderProfileSchema = z.object({
   teamMode: teamModeSchema,
   participationModes: z.array(participationModeSchema).default(['individual', 'team']),
   projects: z.array(projectAssetSchema),
+  memoryItems: z.array(profileMemoryItemSchema).default([]),
   connectedGithubRepositories: z.array(connectedGithubRepositorySchema).default([]),
   careerProfile: careerProfileSchema.default(emptyCareerProfile),
   learnedDomainWeights: z.record(z.string(), z.number()),

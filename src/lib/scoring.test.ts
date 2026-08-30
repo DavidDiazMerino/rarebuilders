@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { BuilderProfile, FeedbackEvent, Opportunity } from '../../shared/domain'
 import { demoOpportunities, demoProfile } from '../data/fixtures'
 import {
@@ -8,6 +8,14 @@ import {
 } from './scoring'
 
 describe('opportunity scoring', () => {
+  beforeEach(() => {
+    vi.setSystemTime('2026-07-17T12:00:00.000Z')
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
   it('keeps the six signals bounded and explains the decision', () => {
     const evaluation = evaluateOpportunity(demoProfile, demoOpportunities[0])
 

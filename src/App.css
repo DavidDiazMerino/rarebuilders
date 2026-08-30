@@ -1667,6 +1667,139 @@
   font-size: 1.1rem;
 }
 
+.profile-memory-ledger {
+  display: grid;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--ink);
+  padding: 1.1rem;
+  background: var(--paper-bright);
+}
+
+.profile-memory-ledger > .section-heading > span,
+.profile-memory-section-heading > span {
+  color: var(--ink-faint);
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.profile-memory-sections {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.profile-memory-section {
+  min-width: 0;
+  border: 1px solid var(--line);
+  padding: 0.75rem;
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.profile-memory-section.pending {
+  border-top: 3px solid var(--accent);
+}
+
+.profile-memory-section.approved {
+  border-top: 3px solid var(--positive);
+}
+
+.profile-memory-section.rejected {
+  border-top: 3px solid var(--ink-faint);
+}
+
+.profile-memory-section-heading,
+.profile-memory-item-heading,
+.profile-memory-source,
+.profile-memory-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.profile-memory-section-heading h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.profile-memory-item {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+  border-top: 1px solid var(--line);
+  padding-top: 0.7rem;
+}
+
+.profile-memory-item-heading {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.profile-memory-item-heading > span,
+.profile-memory-source > span {
+  color: var(--ink-faint);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.profile-memory-item p,
+.profile-memory-item blockquote,
+.profile-memory-empty {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+.profile-memory-source {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.profile-memory-source a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.profile-memory-item details,
+.profile-memory-item blockquote {
+  border-left: 2px solid var(--line);
+  padding-left: 0.6rem;
+}
+
+.profile-memory-item summary {
+  color: var(--ink-faint);
+  cursor: pointer;
+  font-size: 0.68rem;
+}
+
+.profile-memory-item ul {
+  margin: 0.45rem 0 0;
+  padding-left: 1rem;
+  font-size: 0.72rem;
+}
+
+.profile-memory-actions {
+  justify-content: flex-end;
+}
+
+.profile-memory-actions .button {
+  min-height: 2rem;
+  padding: 0.38rem 0.55rem;
+  font-size: 0.65rem;
+}
+
+@media (max-width: 860px) {
+  .profile-memory-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
 .profile-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.65fr);

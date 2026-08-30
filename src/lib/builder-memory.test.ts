@@ -22,6 +22,19 @@ describe('builder memory imports', () => {
       wildcardDomains: ['civic-tech'],
       noGoDomains: ['generic-devops'],
       technologies: ['Vercel'],
+      memoryItems: [{
+        id: 'memory-import',
+        kind: 'asset',
+        title: 'RareBuilders',
+        detail: 'Personal opportunity intelligence.',
+        tags: ['work-productivity'],
+        source: { kind: 'github', label: 'example/rarebuilders' },
+        evidence: ['Opportunity scoring'],
+        reviewStatus: 'approved',
+        createdAt: importedAt,
+        updatedAt: importedAt,
+        reviewedAt: importedAt,
+      }],
       repositories: [{
         fullName: 'example/rarebuilders',
         url: 'https://github.com/example/rarebuilders',
@@ -40,6 +53,9 @@ describe('builder memory imports', () => {
     expect(updated.wildcardDomains).toContain('civic-tech')
     expect(updated.noGoDomains).toContain('generic-devops')
     expect(updated.technologiesToExplore).toContain('Vercel')
+    expect(updated.memoryItems).toEqual([
+      expect.objectContaining({ id: 'memory-import', reviewStatus: 'approved' }),
+    ])
   })
 
   it('keeps inventory provenance compact and recognizable', () => {

@@ -1,8 +1,13 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { searchConnector, searchDevpost, searchEuFunding, searchKaggle } from './connectors'
+
+beforeEach(() => {
+  vi.setSystemTime('2026-07-17T12:00:00.000Z')
+})
 
 afterEach(() => {
   vi.unstubAllGlobals()
+  vi.useRealTimers()
 })
 
 describe('opportunity connectors', () => {
