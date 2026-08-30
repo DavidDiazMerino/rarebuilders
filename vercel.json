@@ -4,6 +4,10 @@
     "api/capabilities.ts": {
       "maxDuration": 30
     },
+    "api/cron/**/*.ts": {
+      "includeFiles": "node_modules/pdfjs-dist/legacy/build/pdf.worker.mjs",
+      "maxDuration": 60
+    },
     "api/discover/**/*.ts": {
       "maxDuration": 30
     },
@@ -24,6 +28,12 @@
       "maxDuration": 30
     }
   },
+  "crons": [
+    {
+      "path": "/api/cron/scan",
+      "schedule": "0 7 * * 2,5"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

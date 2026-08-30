@@ -151,7 +151,7 @@ export type Evidence = z.infer<typeof evidenceSchema>
 export const opportunityProvenanceSchema = z.object({
   mode: z.enum(['live', 'illustrative']),
   evidenceRole: z.enum(['primary', 'reference-pattern', 'pasted']),
-  connector: z.enum(['manual', 'github', 'devpost', 'eu', 'kaggle']),
+  connector: z.string().min(1).max(80),
   method: z.enum([
     'github-api',
     'eu-api',
@@ -161,6 +161,8 @@ export const opportunityProvenanceSchema = z.object({
     'plain-text',
     'pdf',
     'fixture',
+    'feed',
+    'page-monitor',
   ]),
   wordCount: z.number().int().nonnegative().nullable(),
   warnings: z.array(z.string()),
@@ -266,8 +268,8 @@ export type FeedbackEvent = z.infer<typeof feedbackEventSchema>
 export const automatedConnectorIds = ['github', 'devpost', 'eu', 'kaggle'] as const
 export type AutomatedConnectorId = typeof automatedConnectorIds[number]
 
-export const connectorIdSchema = z.enum(['manual', ...automatedConnectorIds])
-export type ConnectorId = z.infer<typeof connectorIdSchema>
+export const connectorIdSchema = z.string().min(1).max(80).regex(/^[a-z0-9][a-z0-9-]*$/)
+export type ConnectorId = string
 
 export const candidateStatusSchema = z.enum(['new', 'inspected', 'added', 'dismissed'])
 export type CandidateStatus = z.infer<typeof candidateStatusSchema>
@@ -291,12 +293,133 @@ export const opportunityCandidateSchema = z.object({
   lastSeenAt: z.string(),
   status: candidateStatusSchema,
   opportunityId: z.string().optional(),
+  sourcePackId: z.string().optional(),
+  sourceSubscriptionId: z.string().optional(),
+  firstSeenAt: z.string().optional(),
+  promotionReasons: z.array(z.string()).optional(),
+  saturation: z.object({
+    comments: z.number().int().nonnegative().nullable().default(null),
+    claims: z.number().int().nonnegative().nullable().default(null),
+    openPullRequests: z.number().int().nonnegative().nullable().default(null),
+    mergedPullRequests: z.number().int().nonnegative().nullable().default(null),
+    confidence: z.number().min(0).max(100).default(0),
+  }).optional(),
+  preliminaryHiddenness: z.number().min(0).max(100).optional(),
 })
 export type OpportunityCandidate = z.infer<typeof opportunityCandidateSchema>
 
+export const sourceScopeSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('global') }),
+  z.object({ type: z.literal('workspace'), workspaceId: z.string().min(1).max(120) }),
+])
+export type SourceScope = z.infer<typeof sourceScopeSchema>
+
+export const sourceCapabilitySchema = z.object({
+  id: connectorIdSchema,
+  label: z.string().min(1),
+  group: z.enum(['catalogue', 'monitor', 'private-relay']),
+  collectorKinds: z.array(z.enum(['search', 'feed', 'page', 'manual'])),
+  configured: z.boolean(),
+  costClass: z.enum(['free', 'credentialed', 'paid']),
+  privacy: z.enum(['public', 'private-capable']),
+  experimental: z.boolean().default(false),
+})
+export type SourceCapability = z.infer<typeof sourceCapabilitySchema>
+
+export const sourceSubscriptionSchema = z.object({
+  id: z.string().min(1),
+  adapterId: connectorIdSchema,
+  sourcePackId: z.string().min(1),
+  label: z.string().min(1),
+  kind: z.enum(['search', 'feed', 'page']),
+  scope: sourceScopeSchema,
+  privacy: z.enum(['public', 'private']),
+  cadence: z.literal('twice-weekly'),
+  query: z.string().optional(),
+  endpoint: z.string().url().optional(),
+  positiveTerms: z.array(z.string()).default([]),
+  negativeTerms: z.array(z.string()).default([]),
+  languages: z.array(z.string()).default(['English']),
+  trust: z.number().min(0).max(100),
+  enabled: z.boolean().default(true),
+  cursor: z.string().optional(),
+  etag: z.string().optional(),
+  lastModified: z.string().optional(),
+  contentHash: z.string().optional(),
+  lastCheckedAt: z.string().optional(),
+  lastChangedAt: z.string().optional(),
+})
+export type SourceSubscription = z.infer<typeof sourceSubscriptionSchema>
+
+export const rawSignalSchema = z.object({
+  id: z.string().min(1),
+  subscriptionId: z.string().min(1),
+  sourcePackId: z.string().min(1),
+  adapterId: connectorIdSchema,
+  scope: sourceScopeSchema,
+  privacy: z.enum(['public', 'private']),
+  externalId: z.string().min(1),
+  canonicalUrl: z.string().url().optional(),
+  title: z.string().min(1),
+  summary: z.string(),
+  sourceText: z.string().max(30_000).optional(),
+  publishedAt: z.string().nullable(),
+  observedAt: z.string(),
+  contentHash: z.string().min(1),
+  changeKind: z.enum(['new', 'updated']),
+  promotionStatus: z.enum(['pending', 'promoted', 'suppressed', 'ambiguous']),
+  promotionReasons: z.array(z.string()),
+  suppressionReasons: z.array(z.string()),
+  preliminaryScore: z.number().min(0).max(100),
+})
+export type RawSignal = z.infer<typeof rawSignalSchema>
+
+export const sourcePackSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  description: z.string(),
+  wildcard: z.boolean().default(false),
+  subscriptions: z.array(sourceSubscriptionSchema),
+})
+export type SourcePack = z.infer<typeof sourcePackSchema>
+
+export const scanRunSchema = z.object({
+  id: z.string(),
+  startedAt: z.string(),
+  completedAt: z.string().optional(),
+  status: z.enum(['running', 'completed', 'partial', 'failed', 'dry-run']),
+  sourcesChecked: z.number().int().nonnegative(),
+  sourcesChanged: z.number().int().nonnegative(),
+  signalsFound: z.number().int().nonnegative(),
+  signalsPromoted: z.number().int().nonnegative(),
+  signalsSuppressed: z.number().int().nonnegative(),
+  analysesUsed: z.number().int().min(0).max(5),
+  errors: z.array(z.string()),
+})
+export type ScanRun = z.infer<typeof scanRunSchema>
+
+export const digestSummarySchema = z.object({
+  id: z.string(),
+  generatedAt: z.string(),
+  cursor: z.string(),
+  newSignals: z.number().int().nonnegative(),
+  promotedSignals: z.number().int().nonnegative(),
+  analysesUsed: z.number().int().nonnegative(),
+  sourceErrors: z.number().int().nonnegative(),
+  scanRunId: z.string().optional(),
+})
+export type DigestSummary = z.infer<typeof digestSummarySchema>
+
 export const appSettingsSchema = z.object({
   autoAnalysisBudget: z.union([z.literal(0), z.literal(2), z.literal(5)]).default(0),
-}).default({ autoAnalysisBudget: 0 })
+  enabledSourcePackIds: z.array(z.string()).default([
+    'agent-infrastructure',
+    'sports-vision',
+    'creative-publishing',
+    'hardware-robotics',
+    'science-wildcard',
+  ]),
+}).default({ autoAnalysisBudget: 0, enabledSourcePackIds: [] })
 export type AppSettings = z.infer<typeof appSettingsSchema>
 
 export const connectorStateSchema = z.object({
@@ -357,7 +480,7 @@ export const opportunityAnalysisSchema = opportunitySchema.omit({
 export type OpportunityAnalysis = z.infer<typeof opportunityAnalysisSchema>
 
 export type AppData = {
-  version: 3
+  version: 4
   profile: BuilderProfile
   opportunities: Opportunity[]
   candidates: OpportunityCandidate[]
@@ -365,6 +488,8 @@ export type AppData = {
   strategies: Record<string, Strategy>
   settings: AppSettings
   connectorState: Partial<Record<ConnectorId, ConnectorState>>
+  lastSignalCursor: string
+  digests: DigestSummary[]
   mode: 'demo' | 'personal' | null
 }
 

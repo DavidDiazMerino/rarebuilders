@@ -37,6 +37,15 @@ export type SourceExtraction = {
   warnings: string[]
 }
 
+export type MonitoredTextDocument = {
+  url: string
+  body: string
+  contentType: string
+  etag?: string
+  lastModified?: string
+  notModified: boolean
+}
+
 function assertPublicIp(address: string) {
   const parsed = ipaddr.parse(address)
   if (parsed.range() !== 'unicast') throw new PublicError('Private, local and reserved network addresses are not allowed.')
@@ -763,6 +772,64 @@ export async function fetchPublicSource(input: string): Promise<SourceExtraction
     } catch (error) {
       if (devpostMetadata) return devpostMetadata
       throw error
+    }
+  } finally {
+    await dispatcher?.close().catch(() => undefined)
+  }
+}
+
+export async function fetchPublicTextDocument(
+  input: string,
+  conditional: { etag?: string; lastModified?: string } = {},
+): Promise<MonitoredTextDocument> {
+  let target = await assertSafeUrl(input)
+  let response: Response | null = null
+  let dispatcher: Agent | null = null
+  try {
+    for (let redirect = 0; redirect <= MAX_REDIRECTS; redirect += 1) {
+      dispatcher = pinnedDispatcher(target.addresses)
+      response = await fetch(target.url, {
+        redirect: 'manual',
+        signal: AbortSignal.timeout(10_000),
+        headers: {
+          'User-Agent': 'RareBuilders/1.0 (+https://github.com/DavidDiazMerino/rarebuilders)',
+          Accept: 'application/rss+xml,application/atom+xml,application/xml,text/xml,text/html,text/plain',
+          ...(conditional.etag ? { 'If-None-Match': conditional.etag } : {}),
+          ...(conditional.lastModified ? { 'If-Modified-Since': conditional.lastModified } : {}),
+        },
+        dispatcher,
+      } as RequestInit & { dispatcher: Agent })
+      if (![301, 302, 303, 307, 308].includes(response.status)) break
+      const location = response.headers.get('location')
+      await response.body?.cancel()
+      await dispatcher.close()
+      dispatcher = null
+      if (!location) throw new PublicError('The monitored source returned an invalid redirect.')
+      target = await assertSafeUrl(new URL(location, target.url).toString())
+    }
+    if (response?.status === 304) {
+      return {
+        url: target.url.toString(),
+        body: '',
+        contentType: response.headers.get('content-type') ?? '',
+        etag: response.headers.get('etag') ?? conditional.etag,
+        lastModified: response.headers.get('last-modified') ?? conditional.lastModified,
+        notModified: true,
+      }
+    }
+    if (!response?.ok) throw new PublicError(`The monitored source returned ${response?.status ?? 'no response'}.`)
+    const contentType = (response.headers.get('content-type') ?? '').toLowerCase()
+    if (contentType && !['xml', 'html', 'text/plain', 'rss', 'atom'].some((type) => contentType.includes(type))) {
+      throw new PublicError('The monitored source is not a supported text document.')
+    }
+    const body = new TextDecoder().decode(await readLimitedBody(response, MAX_TEXT_BYTES))
+    return {
+      url: target.url.toString(),
+      body,
+      contentType,
+      etag: response.headers.get('etag') ?? undefined,
+      lastModified: response.headers.get('last-modified') ?? undefined,
+      notModified: false,
     }
   } finally {
     await dispatcher?.close().catch(() => undefined)

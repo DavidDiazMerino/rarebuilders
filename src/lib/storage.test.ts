@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { emptyPersonalProfile, initialAppData, loadAppData, saveAppData, STORAGE_KEY } from './storage'
+import { emptyPersonalProfile, initialAppData, loadAppData, personalAppData, saveAppData, STORAGE_KEY } from './storage'
 
 describe('local application storage', () => {
   it('round-trips validated application data', () => {
@@ -16,9 +16,28 @@ describe('local application storage', () => {
     window.localStorage.setItem(STORAGE_KEY, '{"version":99,"profile":null}')
 
     const restored = loadAppData()
-    expect(restored.version).toBe(3)
+    expect(restored.version).toBe(4)
     expect(restored.mode).toBeNull()
     expect(restored.profile.name).toBe('David')
+  })
+
+  it('migrates v3 discovery data to v4 without losing the personal profile', () => {
+    const legacy = personalAppData()
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      ...legacy,
+      version: 3,
+      lastSignalCursor: undefined,
+      digests: undefined,
+      settings: { autoAnalysisBudget: 5 },
+    }))
+
+    const restored = loadAppData()
+    expect(restored.version).toBe(4)
+    expect(restored.profile.id).toBe(legacy.profile.id)
+    expect(restored.settings.autoAnalysisBudget).toBe(5)
+    expect(restored.settings.enabledSourcePackIds).toContain('sports-vision')
+    expect(restored.lastSignalCursor).toBe('')
+    expect(restored.digests).toEqual([])
   })
 
   it('migrates profiles saved before connected GitHub sources were tracked', () => {

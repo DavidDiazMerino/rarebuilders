@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { searchConnector, searchDevpost, searchEuFunding, searchKaggle } from './connectors'
+import { searchConnector, searchDevpost, searchEuFunding, searchGithubCandidates, searchKaggle } from './connectors'
 
 beforeEach(() => {
   vi.setSystemTime('2026-07-17T12:00:00.000Z')
@@ -11,6 +11,27 @@ afterEach(() => {
 })
 
 describe('opportunity connectors', () => {
+  it('suppresses obviously saturated GitHub bounties and extracts visible rewards', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
+      items: [
+        {
+          id: 1, number: 1, title: 'Open connector bounty — $2,500', body: 'Reward for implementing a connector.',
+          html_url: 'https://github.com/acme/project/issues/1', repository_url: 'https://api.github.com/repos/acme/project',
+          labels: [{ name: 'bounty' }], comments: 3, created_at: '2026-07-10T10:00:00Z', updated_at: '2026-07-17T10:00:00Z',
+        },
+        {
+          id: 2, number: 2, title: 'Overclaimed bounty', body: 'Bounty available.',
+          html_url: 'https://github.com/acme/project/issues/2', repository_url: 'https://api.github.com/repos/acme/project',
+          labels: [{ name: 'bounty' }], comments: 1_000, created_at: '2026-07-10T10:00:00Z', updated_at: '2026-07-17T10:00:00Z',
+        },
+      ],
+    }), { status: 200 })))
+
+    const candidates = await searchGithubCandidates('connector')
+    expect(candidates).toHaveLength(1)
+    expect(candidates[0]).toMatchObject({ reward: '$2,500', saturation: { comments: 3 } })
+  })
+
   it('normalizes Devpost hackathons into shared candidates', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({
       hackathons: [{
