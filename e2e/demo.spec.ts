@@ -253,7 +253,7 @@ test('golden path imports the UNESCO call as live evidence without sending the p
 test('twice-weekly feed adds a visible scan digest without exposing profile data', async ({ page }) => {
   const data = initialAppData()
   data.mode = 'demo'
-  await page.route('**/api/signals/feed**', async (route) => {
+  await page.route('**/api/sources?action=feed**', async (route) => {
     expect(route.request().method()).toBe('GET')
     expect(route.request().postData()).toBeNull()
     await route.fulfill({
@@ -289,9 +289,9 @@ test('twice-weekly feed adds a visible scan digest without exposing profile data
 test('operations shows source health and pack controls', async ({ page }) => {
   const data = initialAppData()
   data.mode = 'demo'
-  await page.route('**/api/signals/feed**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: { cursor: '', candidates: [], opportunities: [], digest: null }, meta: { cached: false, requestId: 'feed' } }) }))
-  await page.route('**/api/sources/status', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: { owner: true, updatedAt: '2026-08-30T22:00:00.000Z', latestRun: null, sourceCount: 11, signalCount: 34, candidateCount: 8, pausedPackIds: [], monthlyAnalysisUsage: 9 }, meta: { cached: false, requestId: 'status' } }) }))
-  await page.route('**/api/sources/capabilities', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: { capabilities: [], packs: [{ id: 'sports-vision', label: 'Football, vision & sports analytics', description: 'Tracking and sports data challenges.', wildcard: false, sourceCount: 3 }] }, meta: { cached: false, requestId: 'capabilities' } }) }))
+  await page.route('**/api/sources?action=feed**', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: { cursor: '', candidates: [], opportunities: [], digest: null }, meta: { cached: false, requestId: 'feed' } }) }))
+  await page.route('**/api/sources?action=status', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: { owner: true, updatedAt: '2026-08-30T22:00:00.000Z', latestRun: null, sourceCount: 11, signalCount: 34, candidateCount: 8, pausedPackIds: [], monthlyAnalysisUsage: 9 }, meta: { cached: false, requestId: 'status' } }) }))
+  await page.route('**/api/sources?action=capabilities', (route) => route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ data: { capabilities: [], packs: [{ id: 'sports-vision', label: 'Football, vision & sports analytics', description: 'Tracking and sports data challenges.', wildcard: false, sourceCount: 3 }] }, meta: { cached: false, requestId: 'capabilities' } }) }))
   await page.goto('/')
   await page.evaluate(({ key, value }) => window.localStorage.setItem(key, value), { key: STORAGE_KEY, value: JSON.stringify(data) })
   await page.goto('/operations')

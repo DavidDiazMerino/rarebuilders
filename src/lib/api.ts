@@ -145,13 +145,13 @@ export const api = {
   sourceCapabilities: () => request<{
     capabilities: SourceCapability[]
     packs: Array<{ id: string; label: string; description: string; wildcard: boolean; sourceCount: number }>
-  }>('/api/sources/capabilities'),
+  }>('/api/sources?action=capabilities'),
   signalFeed: (cursor: string) => request<{
     cursor: string
     candidates: OpportunityCandidate[]
     opportunities: Opportunity[]
     digest: DigestSummary | null
-  }>(`/api/signals/feed?cursor=${encodeURIComponent(cursor)}&limit=100`),
+  }>(`/api/sources?action=feed&cursor=${encodeURIComponent(cursor)}&limit=100`),
   sourceStatus: () => request<{
     owner: boolean
     updatedAt: string | null
@@ -161,10 +161,10 @@ export const api = {
     candidateCount: number
     pausedPackIds: string[]
     monthlyAnalysisUsage?: number
-  }>('/api/sources/status'),
+  }>('/api/sources?action=status'),
   sourceControl: (input:
     | { action: 'pause' | 'resume'; packId: string }
-    | { action: 'dry-run' | 'scan' }) => request<ScanRun | { pausedPackIds: string[] }>('/api/sources/control', {
+    | { action: 'dry-run' | 'scan' }) => request<ScanRun | { pausedPackIds: string[] }>('/api/sources?action=control', {
     method: 'POST',
     body: JSON.stringify(input),
   }),
