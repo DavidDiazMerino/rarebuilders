@@ -17,9 +17,9 @@ describe('core demo journey', () => {
     )
 
     expect(screen.getByRole('heading', { name: /find the one where you have an edge/i })).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: /explore david’s radar/i }))
+    await user.click(screen.getByRole('button', { name: /open david’s workspace/i }))
 
-    expect(await screen.findByRole('heading', { name: /five opportunities worth your attention/i })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /five patterns shaping your opportunity model/i })).toBeInTheDocument()
     expect(screen.getAllByText(/practical|rare|wildcard/i).length).toBeGreaterThan(0)
   })
 })

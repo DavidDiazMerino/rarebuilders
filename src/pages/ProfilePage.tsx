@@ -903,13 +903,13 @@ export function ProfilePage() {
         <aside className="project-inventory">
           <div className="section-heading">
             <div>
-              <p className="section-kicker">{data.mode === 'demo' ? 'David’s demo inventory' : 'Your project inventory'}</p>
+              <p className="section-kicker">{data.mode === 'demo' ? 'David’s project inventory' : 'Your project inventory'}</p>
               <h2>{data.profile.projects.length} reusable assets</h2>
             </div>
           </div>
           {data.mode === 'demo' ? (
             <div className="demo-inventory-note">
-              These are David’s example projects. They remain while you are in demo mode, even if you add a live opportunity source.
+              This workspace is preloaded with David’s reusable projects. Live opportunity sources update the radar without replacing this private builder memory.
             </div>
           ) : null}
           {data.profile.careerProfile.headline || data.profile.careerProfile.skills.length ? (

@@ -6,7 +6,7 @@ describe('public API errors', () => {
     const error = new Error('429 You exceeded your current quota, check billing details.')
 
     expect(publicMessage(error)).toBe(
-      'The shared live GPT budget is currently unavailable. The cached demo remains fully testable.',
+      'The shared live GPT budget is currently unavailable. Cached workspace strategies remain available.',
     )
   })
 

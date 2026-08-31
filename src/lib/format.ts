@@ -39,5 +39,5 @@ export function deadlineDistance(value: string | null, referenceDate = new Date(
 }
 
 export function sourceKindLabel(kind: string) {
-  return kind === 'demo' ? 'Illustrative pattern' : kind.replace('-', ' ')
+  return kind === 'demo' ? 'Reference pattern' : kind.replace('-', ' ')
 }

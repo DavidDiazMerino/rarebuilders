@@ -40,7 +40,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }
 
   const startPersonalProfile = () => {
-    if (!window.confirm('Leave David’s demo and start an empty personal profile? Any sources or feedback added during the demo will be cleared.')) return
+    if (!window.confirm('Leave David’s workspace and start an empty personal profile? Its local sources and feedback will be cleared.')) return
     enterMode('personal')
     navigate('/profile')
   }
@@ -67,9 +67,9 @@ export function AppShell({ children }: { children: ReactNode }) {
 
         {data.mode === 'demo' ? (
           <div className="mode-card demo">
-            <span>Demo mode</span>
-            <p>You are using David’s example profile. Adding a live source hides sample opportunities, but it does not replace his profile.</p>
-            <button onClick={startPersonalProfile}><CircleUserRound size={14} /> Start my own profile</button>
+            <span>David’s workspace</span>
+            <p>Personal memory stays local. Live discoveries replace the reference layer without changing the builder profile.</p>
+            <button onClick={startPersonalProfile}><CircleUserRound size={14} /> Create another workspace</button>
           </div>
         ) : (
           <div className="mode-card">
@@ -97,7 +97,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </button>
         </div>
         <button className="leave-product" onClick={handleReset}>
-          <LogOut size={14} /> Exit and choose another starting point
+          <LogOut size={14} /> Switch workspace
         </button>
       </aside>
       <main className="product-main">{children}</main>

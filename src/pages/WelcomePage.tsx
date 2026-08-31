@@ -18,7 +18,7 @@ export function WelcomePage() {
             <small>Merino Labs</small>
           </span>
         </div>
-        <span className="build-week-tag">Built for OpenAI Build Week</span>
+        <span className="build-week-tag">Private by default · live source radar</span>
       </header>
 
       <section className="welcome-grid">
@@ -38,19 +38,19 @@ export function WelcomePage() {
         </div>
 
         <div className="entry-panel">
-          <p className="entry-panel-label">Choose your starting point</p>
+          <p className="entry-panel-label">Open a workspace</p>
           <button className="entry-choice featured" onClick={() => enter('demo')}>
             <span className="entry-icon"><Radar size={22} /></span>
             <span>
-              <strong>Explore David’s radar</strong>
-              <small>Instant product demo. Skip setup and explore a populated example profile with five clearly labelled illustrative patterns.</small>
+              <strong>Open David’s workspace</strong>
+              <small>Continue with the private builder memory, reusable projects and opportunity preferences already configured on this machine.</small>
             </span>
             <ArrowRight size={20} />
           </button>
           <button className="entry-choice" onClick={() => enter('personal')}>
             <span className="entry-icon"><FileStack size={22} /></span>
             <span>
-              <strong>Build my profile</strong>
+              <strong>Create another workspace</strong>
               <small>Create your own private radar from six decisions, then optionally add a CV, Markdown notes and selected public GitHub projects.</small>
             </span>
             <ArrowRight size={20} />
