@@ -27,12 +27,12 @@ export function OpportunityCard({
         <span className={`bucket-label ${bucket}`}>{bucket}</span>
         {bucketMatch === 'closest' ? <span className="bucket-fit">Closest available</span> : null}
         <span className={illustrative ? 'data-label demo' : 'data-label live'}>
-          {illustrative ? 'Illustrative sample' : 'Live evidence'}
+          {illustrative ? 'Reference pattern' : 'Live evidence'}
         </span>
       </div>
       <div className="opportunity-card-heading">
         <div>
-          <p className="card-source">{opportunity.organizer} · {sourceKindLabel(opportunity.sourceKind)}</p>
+          <p className="card-source">{opportunity.organizer}{illustrative ? '' : ` · ${sourceKindLabel(opportunity.sourceKind)}`}</p>
           <h2><Link to={`/opportunities/${opportunity.id}`}>{opportunity.title}</Link></h2>
         </div>
         <div className="overall-score" aria-label={`Personal edge ${evaluation.overall} out of 100`}>
@@ -42,8 +42,8 @@ export function OpportunityCard({
       </div>
       <p className="card-summary">{opportunity.summary}</p>
       <div className="deadline-row">
-        <span>{formatDeadline(opportunity.deadline)}</span>
-        <strong>{deadlineDistance(opportunity.deadline, referenceDate)}</strong>
+        <span>{illustrative ? 'Reference timing' : formatDeadline(opportunity.deadline)}</span>
+        <strong>{illustrative ? 'Not a current call' : deadlineDistance(opportunity.deadline, referenceDate)}</strong>
         <span>{opportunity.effortHours > 0 ? `${opportunity.effortHours}h estimated` : 'Effort unknown'}</span>
       </div>
       <p className="card-reward"><span>Reward</span>{opportunity.reward || 'Not confirmed'}</p>

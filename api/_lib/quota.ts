@@ -25,7 +25,7 @@ export function positiveInteger(value: string | undefined, fallback: number, max
 export async function reserveAiOperation(ip: string, operation: AiOperation, owner = false) {
   const redis = getRedis()
   if (!redis) {
-    return { ok: false as const, reason: 'AI safeguards are not configured. The cached demo remains available.' }
+    return { ok: false as const, reason: 'AI safeguards are not configured. Cached workspace strategies remain available.' }
   }
 
   const globalLimit = positiveInteger(
@@ -59,7 +59,7 @@ export async function reserveAiOperation(ip: string, operation: AiOperation, own
     `, [globalKey, ipKey], [globalLimit, operationLimit, 60 * 60 * 24 * 35, 60 * 60 * 26]) as Array<number | string>
     const [allowed, globalCount, ipCount, reason] = result.map(Number)
     if (!allowed && reason === 1) {
-      return { ok: false as const, reason: 'The shared GPT-5.6 demo budget is exhausted. Cached results still work.' }
+      return { ok: false as const, reason: 'The shared GPT-5.6 budget is exhausted. Cached workspace strategies still work.' }
     }
     if (!allowed) {
       return { ok: false as const, reason: `This browser has reached today’s ${operation} limit. Try a cached source.` }

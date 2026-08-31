@@ -61,10 +61,10 @@ export function publicMessage(error: unknown, fallback = 'The server could not c
   if (error instanceof Error && error.message) {
     const message = error.message
     if (message.includes('429') && message.toLowerCase().includes('quota')) {
-      return 'The shared live GPT budget is currently unavailable. The cached demo remains fully testable.'
+      return 'The shared live GPT budget is currently unavailable. Cached workspace strategies remain available.'
     }
     if (message.includes('401') || message.toLowerCase().includes('incorrect api key')) {
-      return 'Live GPT authentication is temporarily unavailable. The cached demo remains fully testable.'
+      return 'Live GPT authentication is temporarily unavailable. Cached workspace strategies remain available.'
     }
     if (error instanceof PublicError) return message
   }

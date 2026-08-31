@@ -3,11 +3,11 @@ import { initialAppData, STORAGE_KEY } from '../src/lib/storage'
 
 test('judge can reach a scored opportunity and its strategy', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /explore david’s radar/i }).click()
+  await page.getByRole('button', { name: /open david’s workspace/i }).click()
 
-  await expect(page.getByRole('heading', { name: /five opportunities worth your attention/i })).toBeVisible()
-  await expect(page.getByText(/quick demo · 60 seconds/i)).toBeVisible()
-  await expect(page.getByText(/you are using david’s example profile/i)).toBeVisible()
+  await expect(page.getByRole('heading', { name: /five patterns shaping your opportunity model/i })).toBeVisible()
+  await expect(page.getByText(/showing five decision patterns/i)).toBeVisible()
+  await expect(page.getByText(/david’s workspace/i)).toBeVisible()
   const cachedDemoCard = page.locator('.opportunity-card').filter({
     hasText: 'Teacher workflow agent pilot',
   })
@@ -15,19 +15,19 @@ test('judge can reach a scored opportunity and its strategy', async ({ page }) =
 
   await expect(page.getByRole('heading', { name: /why this could work/i })).toBeVisible()
   await expect(page.getByRole('heading', { name: /why you may walk away/i })).toBeVisible()
-  await expect(page.getByText(/cached demo result/i)).toBeVisible()
+  await expect(page.getByText(/cached reference strategy/i)).toBeVisible()
 })
 
 test('a new builder completes onboarding and reaches a personal radar', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /build my profile/i }).click()
+  await page.getByRole('button', { name: /create another workspace/i }).click()
 
   await expect(page.getByText(/decision 01 of 06/i)).toBeVisible()
   await page.getByRole('button', { name: /set constraints/i }).click()
   await expect(page.getByText(/02 · hours available/i)).toBeVisible()
   await page.getByRole('button', { name: /build my radar/i }).click()
 
-  await expect(page.getByRole('heading', { name: /five opportunities worth your attention/i })).toBeVisible()
+  await expect(page.getByRole('heading', { name: /five patterns shaping your opportunity model/i })).toBeVisible()
 })
 
 test('an imported GitHub repository remains visible in builder memory', async ({ page }) => {
@@ -98,7 +98,7 @@ test('decision library preserves saved and source states', async ({ page }) => {
 
 test('latest feedback visibly replaces learning and the radar decision', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('button', { name: /explore david’s radar/i }).click()
+  await page.getByRole('button', { name: /open david’s workspace/i }).click()
 
   const firstCard = page.locator('.opportunity-card').first()
   const title = await firstCard.getByRole('heading').innerText()

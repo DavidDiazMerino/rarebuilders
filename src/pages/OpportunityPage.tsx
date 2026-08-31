@@ -98,7 +98,7 @@ export function OpportunityPage() {
         <div>
           <div className="dossier-topline">
             <span className={illustrative ? 'data-label demo' : 'data-label live'}>
-              {illustrative ? 'Illustrative sample' : 'Live evidence · normalized'}
+              {illustrative ? 'Reference pattern' : 'Live evidence · normalized'}
             </span>
             <span>{opportunity.region} · {opportunity.language}</span>
           </div>
@@ -114,8 +114,8 @@ export function OpportunityPage() {
       </header>
 
       <section className="facts-strip">
-        <div><Clock3 size={17} /><span><small>Deadline</small><strong>{formatDeadline(opportunity.deadline)}</strong></span></div>
-        <div><AlertTriangle size={17} /><span><small>Urgency</small><strong>{opportunity.provenance.mode === 'illustrative' ? 'Illustrative snapshot' : deadlineDistance(opportunity.deadline)}</strong></span></div>
+        <div><Clock3 size={17} /><span><small>Deadline</small><strong>{illustrative ? 'Reference only' : formatDeadline(opportunity.deadline)}</strong></span></div>
+        <div><AlertTriangle size={17} /><span><small>Urgency</small><strong>{illustrative ? 'Not a current call' : deadlineDistance(opportunity.deadline)}</strong></span></div>
         <div><Trophy size={17} /><span><small>Reward</small><strong>{opportunity.reward || 'Not confirmed'}</strong></span></div>
         <div><CheckCircle2 size={17} /><span><small>Confidence</small><strong>{evaluation.confidence}/100</strong></span></div>
         {hasPublicSource ? (
@@ -128,7 +128,7 @@ export function OpportunityPage() {
         ) : (
           <div><ExternalLink size={17} /><span>
             <small>{illustrative ? 'Evidence status' : 'Source evidence'}</small>
-            <strong>{illustrative ? 'Illustrative only' : 'Pasted evidence'}</strong>
+            <strong>{illustrative ? 'Reference only' : 'Pasted evidence'}</strong>
           </span></div>
         )}
       </section>
@@ -136,8 +136,8 @@ export function OpportunityPage() {
         <div className="illustrative-source-note">
           <AlertTriangle size={16} />
           <span>
-            <strong>This demo opportunity is fictional.</strong>
-            The external link demonstrates where this kind of opportunity may be discovered; it is not the page for this specific contest.
+            <strong>This is a fictional reference pattern.</strong>
+            It is retained to exercise ranking and feedback until live evidence replaces it; the external link only shows a similar discovery channel.
           </span>
         </div>
       ) : null}

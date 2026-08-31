@@ -1,5 +1,5 @@
-import { Activity, CheckCircle2, EyeOff, FilePlus2, SlidersHorizontal, Sparkles } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { Activity, EyeOff, FilePlus2, SlidersHorizontal, Sparkles } from 'lucide-react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { FeedbackAction, FeedbackKind } from '../../shared/domain'
 import { OpportunityCard } from '../components/OpportunityCard'
@@ -16,11 +16,6 @@ export function RadarPage() {
     kind: FeedbackKind
     action: FeedbackAction
   } | null>(null)
-  const [showDemoGuide, setShowDemoGuide] = useState(false)
-  useEffect(() => {
-    if (data.mode !== 'demo' || window.sessionStorage.getItem('rarebuilders:demo-guide-seen')) return
-    setShowDemoGuide(true)
-  }, [data.mode])
   const hasLiveOpportunities = data.opportunities.some((opportunity) => opportunity.provenance.mode === 'live')
   const referenceDate = useMemo(
     () => hasLiveOpportunities ? new Date() : new Date(demoSnapshotTime),
@@ -63,12 +58,14 @@ export function RadarPage() {
   return (
     <div className="page">
       <PageHeader
-        eyebrow={hasLiveOpportunities ? date : `Illustrative snapshot · ${new Intl.DateTimeFormat('en', { month: 'long', day: 'numeric', year: 'numeric' }).format(referenceDate)}`}
-        title={radar.length === 5
-          ? 'Five opportunities worth your attention.'
-          : radar.length === 1
-            ? 'One opportunity worth your attention.'
-            : `${radar.length || 'No'} opportunities worth your attention.`}
+        eyebrow={date}
+        title={!hasLiveOpportunities
+          ? 'Five patterns shaping your opportunity model.'
+          : radar.length === 5
+            ? 'Five opportunities worth your attention.'
+            : radar.length === 1
+              ? 'One opportunity worth your attention.'
+              : `${radar.length || 'No'} opportunities worth your attention.`}
         description={`Built around ${data.profile.name}’s ${data.profile.weeklyHours}-hour week, existing projects and appetite for asymmetric bets.`}
         actions={(
           <>
@@ -88,28 +85,18 @@ export function RadarPage() {
           <Link to="/operations">Open operations</Link>
         </section>
       ) : null}
-      {showDemoGuide ? (
-        <section className="demo-guide" aria-label="Demo walkthrough">
-          <div>
-            <span>Quick demo · 60 seconds</span>
-            <h2>This is David’s populated example, so you can test the product before creating a profile.</h2>
-          </div>
-          <ol>
-            <li><strong>Open a dossier</strong><span>See why one opportunity fits this builder.</span></li>
-            <li><strong>Teach the radar</strong><span>Try More like this or Pass and watch the feedback state.</span></li>
-            <li><strong>Add a real source</strong><span>Live evidence replaces illustrative opportunity cards.</span></li>
-          </ol>
-          <button onClick={() => {
-            window.sessionStorage.setItem('rarebuilders:demo-guide-seen', '1')
-            setShowDemoGuide(false)
-          }}><CheckCircle2 size={15} /> Got it, explore</button>
-        </section>
+      {!hasLiveOpportunities ? (
+        <div className="reference-layer-note">
+          <span>Reference layer</span>
+          <p><strong>Showing five decision patterns while the live source radar warms up.</strong> They exercise your ranking and feedback model, but are not current calls.</p>
+          <Link to="/operations">Check live-source status</Link>
+        </div>
       ) : null}
       {usingLiveOnly ? (
         <div className="pool-confirmation live-pool-notice" role="status">
           <span>
             <strong>Live radar active.</strong> You added {liveCount} live source{liveCount === 1 ? '' : 's'},
-            so {illustrativeCount} sample pattern{illustrativeCount === 1 ? ' is' : 's are'} hidden rather than mixed into a real decision.
+            so {illustrativeCount} reference pattern{illustrativeCount === 1 ? ' is' : 's are'} hidden rather than mixed into a real decision.
             {liveCount < 5 ? ` Add ${5 - liveCount} more live source${5 - liveCount === 1 ? '' : 's'} to rebuild a full five-item radar.` : ''}
           </span>
           <Link to="/inbox">Add live source</Link>
